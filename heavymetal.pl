@@ -28,6 +28,7 @@
 #                     Tiny changes in UI. Added twitter via RSS. New BANNER module. New CRON
 # v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 # v3.1.004 2013-03-25 New: Support for External codes & External Custom Commands. Remote Control.
+# v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
 #
 # Special thanks to Jim Haynes for his help in making HM3 run in Linux.
 # Special thanks to Steve Garrison for his help in testing HM3 in Windows.
@@ -37,8 +38,8 @@
 use strict;
 
 
-my $sGlobalVersion = "3.1.004";
-my $sGlobalRelease = '2013-03-25';
+my $sGlobalVersion = "3.2.000";
+my $sGlobalRelease = '2014-10-20';
 
 my $sAboutMessage = "Version $sGlobalVersion ($sGlobalRelease)\n\n
 HeavyMetal is a simple application to interface teletype machines to computers and the internet.
@@ -60,8 +61,9 @@ v3.1.001 2012-03-10 Rewrite Full news retrieval, now it is based in a real HTML 
 v3.1.002 2012-03-25 Added METAR HISTORIC. New: Twitter via RSS, BANNER module, CRON.
 v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 v3.1.004 2013-03-25 New: Support External codes & External Commands. Remote Control.
+v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
 See:
-  http://lu8aja.com.ar/heavymetal.html
+  http://albinarrate.com/heavymetal.html
   http://github.com/lu8aja/HeavyMetal";
 
 ### TODO LIST
@@ -209,7 +211,7 @@ $Configs{HMNetName}   = 'Station Name';
 $Configs{HMNetPass}   = 'HMNET Password';
 $Configs{HMNetOwner}  = 'Your Name';
 $Configs{HMNetEmail}  = 'Contact Email';
-$Configs{HMNetUrl}    = 'http://lu8aja.com.ar/heavymetal/';
+$Configs{HMNetUrl}    = 'http://albinarrate.com/heavymetal/';
 	
 #- - - - - - - - - - MSN Configs - - - - - - - - - - - - - - - - - - - - -
 $Configs{MsnEnabled}  = 0;                   
@@ -225,7 +227,7 @@ $Configs{'TTY.2.Port'} = "OFF";
 #- - - - - - - - - - RSS Configs - - - - - - - - - - - - - - - - - - - - -
 
 # Main history file
-$Configs{'RSS.Feed.HISTORY'}           = 'http://lu8aja.com.ar/heavymetal/history/rss.xml';
+$Configs{'RSS.Feed.HISTORY'}           = 'http://albinarrate.com/heavymetal/history/rss.xml';
 
 # AP
 $Configs{'RSS.Feed.AP'}                = 'http://hosted.ap.org/lineups/TOPHEADS.rss?SITE=WHIZ&SECTION=HOME';
