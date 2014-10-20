@@ -169,3 +169,8 @@ already packaged, you do not need to follow these instructions.
 * Easy one click connect from menu to another user of HMNet user
 * Weather temperatures are now Celsius/Farenheit configurable
 * Option to send report for bugs using the Help menu, one single click
+
+### HeavyMetal v3.1.004 (2013-03-25)
+* Support for External Codes (tables in ini files)
+* External Custom Commands (custom.pl)
+* Remote Control.
