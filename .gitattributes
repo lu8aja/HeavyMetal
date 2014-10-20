@@ -5,6 +5,7 @@
 *.pl text eol=lf
 *.pm text eol=lf
 *.cfg text eol=lf
+*.md text eol=lf
 
 
 # Custom for Visual Studio

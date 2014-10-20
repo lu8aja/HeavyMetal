@@ -1,11 +1,11 @@
 #!/usr/bin/perl -X
 #
-my $sGlobalVersion = "3.0.001";
-my $sGlobalRelease = '2010-11-21';
+my $sGlobalVersion = "3.0.004";
+my $sGlobalRelease = '2011-10-04';
 
 ##############################################################################
 #
-# HeavyMetal v3.0.000
+# HeavyMetal v3.0.004
 #
 # Teletype control program.
 #
@@ -16,6 +16,10 @@ my $sGlobalRelease = '2010-11-21';
 #
 # 2010-06-25 v3.0.000 Finished complete rewrite
 # 2010-11-20 v3.0.001 Fixes to Serial port handling in Windows XP
+# 2010-12-05 v3.0.002 Changes to FTP fetch to use NET-FTP with Pasive Mode, 
+#                     and drop of IO::Socket::Telnet usage
+# 2010-12-11 v3.0.003 Bugfix
+# 2011-10-04 v3.0.004 Added ConsoleOnly mode and HMNet Directory support
 ##############################################################################
 
 
@@ -25,7 +29,6 @@ my $sGlobalRelease = '2010-11-21';
 # Nothing for X10 has been tested
 # Solve issue with LoopSuppress not being updated from the interfase
 # Autedetect loop suppress upon init o reinit
-
 
 #-----------------------------------------------------------------------------
 # Module imports
@@ -45,11 +48,11 @@ $Modules{'Device::SerialPort'} = {'order' => 5,  'loaded' => 0, 'required' => 1,
 $Modules{'LWP::Simple'}        = {'order' => 6,  'loaded' => 0, 'required' => 1, 'os'=>''};
 $Modules{'Net::POP3'}          = {'order' => 7,  'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'Net::SMTP'}          = {'order' => 8,  'loaded' => 0, 'required' => 0, 'os'=>''};
+$Modules{'Net::FTP'}           = {'order' => 8,  'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'MIME::Base64'}       = {'order' => 9,  'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'IO::Handle'}         = {'order' => 10, 'loaded' => 0, 'required' => 1, 'os'=>''};
 $Modules{'IO::Socket'}         = {'order' => 11, 'loaded' => 0, 'required' => 1, 'os'=>''};
 $Modules{'IO::Select'}         = {'order' => 12, 'loaded' => 0, 'required' => 1, 'os'=>''};
-$Modules{'IO::Socket::Telnet'} = {'order' => 12, 'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'POSIX'}              = {'order' => 12, 'loaded' => 0, 'required' => 0, 'os'=>'', 'args'=>"('tmpnam')"};
 $Modules{'Text::Wrap'}         = {'order' => 13, 'loaded' => 0, 'required' => 0, 'os'=>''};
 
@@ -69,8 +72,10 @@ $Modules{'Tk::Scrollbar'}      = {'order' => 26, 'loaded' => 0, 'required' => 1,
 $Modules{'Tk::Text'}           = {'order' => 27, 'loaded' => 0, 'required' => 1, 'os'=>''};
 $Modules{'Tk::Menu'}           = {'order' => 28, 'loaded' => 0, 'required' => 1, 'os'=>''};
 $Modules{'Tk::Icon'}           = {'order' => 29, 'loaded' => 0, 'required' => 0, 'os'=>''};
-$Modules{'Finance::YahooQuote'}= {'order' => 39, 'loaded' => 0, 'required' => 0, 'os'=>''};
 
+$Modules{'Finance::YahooQuote'}= {'order' => 40, 'loaded' => 0, 'required' => 0, 'os'=>''};
+
+$Modules{'Time::HiRes'}        = {'order' => 40, 'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'Math::BigInt'}       = {'order' => 40, 'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'URI::Escape'}        = {'order' => 40, 'loaded' => 0, 'required' => 0, 'os'=>''};
 $Modules{'Data::Dumper'}       = {'order' => 40, 'loaded' => 0, 'required' => 0, 'os'=>''};
@@ -82,103 +87,48 @@ $Modules{'Digest::SHA1'}       = {'order' => 40, 'loaded' => 0, 'required' => 0,
 $Modules{'MSN'}                = {'order' => 42, 'loaded' => 0, 'required' => 0, 'os'=>''};
 
 #-----------------------------------------------------------------------------
-# Perl2exe directives
+# Packer trick to load modules
 #-----------------------------------------------------------------------------
-
-#perl2exe_exclude "Convert/EBCDIC.pm"
-#perl2exe_exclude "Mac/InternetConfig.pm"
-#perl2exe_exclude "Encode/ConfigLocal.pm"
-#perl2exe_exclude "File/BSDGlob.pm"
-#perl2exe_exclude "Convert/EBCDIC.pm"
-#perl2exe_exclude "I18N/Langinfo.pm"
-
-# - - - perl2exe_include Win32::SerialPort
-# - - - perl2exe_include Win32::API
-# - - - perl2exe_include File::Spec::Win32
-# - - - perl2exe_include Tk
-# - - - perl2exe_include Tk::ROText
-# - - - perl2exe_include Tk::FileSelect
-# - - - perl2exe_include Tk::Dialog
-# - - - perl2exe_include LWP::Simple
-# - - - perl2exe_include Net::POP3
-# - - - perl2exe_include Net::SMTP
-# - - - perl2exe_include File::Spec::Win32
-# - - - perl2exe_include IO::File
-# - - - perl2exe_include POSIX
-# - - - perl2exe_include Text::Wrap
-# - - - perl2exe_include Tk::Menubutton
-# - - - perl2exe_include Tk::Label
-# - - - perl2exe_include Tk::Button
-# - - - perl2exe_include Tk::Checkbutton
-# - - - perl2exe_include Tk::Radiobutton
-# - - - perl2exe_include Tk::Entry
-# - - - perl2exe_include Tk::Frame
-# - - - perl2exe_include Tk::Listbox
-# - - - perl2exe_include Tk::Scrollbar
-# - - - perl2exe_include Tk::Text
-# - - - perl2exe_include Tk::Menu
-# - - - perl2exe_include Tk::Icon
-# - - - perl2exe_include Finance::YahooQuote
-# - - - perl2exe_include Math::BigInt
-# - - - perl2exe_include Math::BigInt::Calc
-# - - - perl2exe_include Crypt::SSLeay
-# - - -  --- perl2exe_include IO::Socket::SSL
-# - - - perl2exe_include URI::Escape
-# - - - perl2exe_include Data::Dumper
-# - - - perl2exe_include HTTP::Request
-# - - - perl2exe_include LWP::UserAgent
-# - - - perl2exe_include HTML::Entities
-# - - - perl2exe_include Digest::MD5
-# - - - perl2exe_include Digest::SHA1
-
-# Note: You may need to tweak these paths!
-# - - - perl2exe_include "c:/TTY/lib/MSN.pm"
-# - - - perl2exe_include "c:/TTY/lib/MSN/Notification.pm"
-# - - - perl2exe_include "c:/TTY/lib/MSN/SwitchBoard.pm"
-# - - - perl2exe_include "c:/TTY/lib/MSN/Util.pm"
-# - - - perl2exe_include "c:/TTY/lib/MSN/P2P.pm"
-
 if (0){
-	use Win32::SerialPort;
-	use Win32::API;
-	use File::Spec::Win32;
-	use Tk;
-	use Tk::ROText;
-	use Tk::FileSelect;
-	use Tk::Dialog;
-	use LWP::Simple;
-	use Net::POP3;
-	use Net::SMTP;
-	use File::Spec::Win32;
-	use IO::File;
-	use IO::Socket;
-	use IO::Select;
-	use IO::Socket::Telnet;
-	use POSIX ('tmpnam');
-	use Text::Wrap;
-	use Tk::Menubutton;
-	use Tk::Label;
-	use Tk::Button;
-	use Tk::Checkbutton;
-	use Tk::Radiobutton;
-	use Tk::Entry;
-	use Tk::Frame;
-	use Tk::Listbox;
-	use Tk::Scrollbar;
-	use Tk::Text;
-	use Tk::Menu;
-	use Tk::Icon;
-	use Finance::YahooQuote;
-	use Math::BigInt;
-	use Crypt::SSLeay;
-	use URI::Escape;
-	use Data::Dumper;
-	use HTTP::Request;
-	use LWP::UserAgent;
-	use HTML::Entities ('decode_entities');
-	use MSN;
-	use Digest::MD5;
-	use Digest::SHA1;
+#	use Win32::SerialPort;
+#	use Win32::API;
+#	use File::Spec::Win32;
+#	use Tk;
+#	use Tk::ROText;
+#	use Tk::FileSelect;
+#	use Tk::Dialog;
+#	use LWP::Simple;
+#	use Net::POP3;
+#	use Net::SMTP;
+#	use File::Spec::Win32;
+#	use IO::File;
+#	use IO::Socket;
+#	use IO::Select;
+#	use POSIX ('tmpnam');
+#	use Text::Wrap;
+#	use Tk::Menubutton;
+#	use Tk::Label;
+#	use Tk::Button;
+#	use Tk::Checkbutton;
+#	use Tk::Radiobutton;
+#	use Tk::Entry;
+#	use Tk::Frame;
+#	use Tk::Listbox;
+#	use Tk::Scrollbar;
+#	use Tk::Text;
+#	use Tk::Menu;
+#	use Tk::Icon;
+#	use Finance::YahooQuote;
+#	use Math::BigInt;
+#	use Crypt::SSLeay;
+#	use URI::Escape;
+#	use Data::Dumper;
+#	use HTTP::Request;
+#	use LWP::UserAgent;
+#	use HTML::Entities ('decode_entities');
+#	use MSN;
+#	use Digest::MD5;
+#	use Digest::SHA1;
 }
 
 #-----------------------------------------------------------------------------
@@ -196,9 +146,10 @@ $aConfigs{Debug}           = 0;
 $aConfigs{DebugFile}       = '>>debug/debug-$DATETIME.log';
 $aConfigs{DebugShowErrors} = 0;
 $aConfigs{SerialSetserial} = 1;
+$aConfigs{ConsoleOnly}     = 0;
 
 #-- Code converstion settings.  Current choices are ASCII, USTTY, ITA2, TTS-M20
-$aConfigs{LoopCode} = 'ASCII';
+$aConfigs{SerialCode} = 'ASCII';
 
 #-- Set Baud rate here
 $aConfigs{SerialDivisor} = 0; # Note: Defaults to WPM60 after %aBaudRates is defined (aprox line 780)
@@ -248,6 +199,14 @@ $aConfigs{TelnetPort}      = 1078;
 $aConfigs{TelnetWelcome}   = "Welcome to $aConfigs{SystemName} using HeavyMetal v$sGlobalVersion ($sGlobalRelease) Telnet-TTY chat";
 $aConfigs{TelnetNegotiate} = 1;
 
+#- - - - - - - - - - HMNet Internet Directory - - - - - - - - - - - - - - -
+$aConfigs{HMNetEnabled}= 0;
+$aConfigs{HMNetName}   = 'Station Name';
+$aConfigs{HMNetPass}   = 'MHNET Password';
+$aConfigs{HMNetOwner}  = 'Your Name';
+$aConfigs{HMNetEmail}  = 'Contact Email';
+$aConfigs{HMNetUrl}    = 'http://albinarrate.com/heavymetal/';
+	
 #- - - - - - - - - - MSN Configs - - - - - - - - - - - - - - - - - - - - -
 $aConfigs{MsnEnabled}  = 0;                   
 $aConfigs{MsnUsername} = '';
@@ -264,6 +223,9 @@ $aConfigs{StockPortfolio} = "DJI SPC";
 $aConfigs{TtyExtraLtrs} = 0;
 $aConfigs{TtyExtraCr}   = 3;
 $aConfigs{TtyExtraLf}   = 1;
+# Select only one or zero of these
+$aConfigs{TtyTranslateLF} = 1;	# Translate ascii CR to CR/LF
+$aConfigs{TtyTranslateCR} = 0;	# Translate ascii LF to CR/LF
 
 #-- Number of columns for TTY & HOST window
 $aConfigs{Columns} = 68; 
@@ -294,6 +256,7 @@ my $nSessionsCount   = 0;  # Sessions counter
 my $NewSessionId     = 0;  # Session id
 my @aSessions;             # Array for all sessions
 my $nShutDown        = 0;  # At any moment, setting this to a unixtime will shutdown at that moment or later
+my $bExitMainLoop    = 0;
 my $nSleep           = 0;
 my $nTimerSleep      = 0;
 my $nSleepRepeat     = 0;
@@ -359,9 +322,9 @@ $aConfigs{SerialAddress} = $aPortAddresses{ $aConfigs{SerialPort} };
 #my $BAUD51  = 2180;	# 60 wpm gear for 6-bit codes w/ 2 stop bits (slowed)
    		   
 my %aBaudRates = (
-	'WPM60'     => {'divisor' => 2534, 'label' => '45.5 Baud (60WPM)'              }, # 45.5 baud
+	'BAUD45'    => {'divisor' => 2534, 'label' => '45.5 Baud (60WPM)'              }, # 45.5 baud
 	'BAUD51'    => {'divisor' => 2190, 'label' => '51 Baud (60WPM for 6-bit codes)'}, # 60 wpm gear for 6-bit codes w/ 1 stop bits (slowed)
-	'WPM66'     => {'divisor' => 2304, 'label' => '50 Baud (66WPM)'                }, # 50 baud
+	'BAUD50'    => {'divisor' => 2304, 'label' => '50 Baud (66WPM)'                }, # 50 baud
 	'BAUD56'    => {'divisor' => 2057, 'label' => '56 Baud (75WPM)'                }, # 75 wpm for 5-bit codes
 	'BAUD66'    => {'divisor' => 1697, 'label' => '74 Baud (100WPM)'               }, #
 	'WPM100'    => {'divisor' => 1555, 'label' => '66 Baud'                        }, # 74 baud
@@ -376,7 +339,7 @@ my %aBaudRates = (
 );                                                                                 
 
 if ($aConfigs{SerialDivisor} == 0){
-	$aConfigs{SerialDivisor} = $aBaudRates{WPM60}->{divisor};
+	$aConfigs{SerialDivisor} = $aBaudRates{BAUD50}->{divisor};
 }
 
 #-- Derived variables for status line - don't change.  These will be generated based on $aConfigs{SerialDivisor}
@@ -428,7 +391,7 @@ my $qbf_string  = "The quick brown fox jumped over the lazy dogs.\nThe quick bro
 # Global vars
 my $sckTelnetListener;   # Listener socket
 my %aTelnetSockets;      # Map for sockets->sessions
-
+my $nTelnetSockets = 0;
 my $oTelnetReadSet;      # IO Select Set for Socket READ
 my $oTelnetWriteSet;     # IO Select Set for Socket WRITE
 my $oTelnetExceptionSet; # IO Select Set for Socket EXCEPTION
@@ -469,14 +432,14 @@ my %aActionCommands = (
 	'UPTIME'    => {command => \&do_uptime,          auth => 1, help => 'Show uptime',                  args => 'No args'},
 	'TIME'      => {command => \&do_time,            auth => 1, help => 'Show current localtime',       args => 'No args'},
 	'JOKE'      => {command => \&do_joke,            auth => 0, help => 'Tell me a joke',               args => 'No args'},
-	'LOGOUT'    => {command => \&do_logout,          auth => 2, help => 'Disconnect a session (telnet only)', args => 'No args'},
-	'QUIT'      => {command => \&do_logout,          auth => 2, help => 'Alias for logout',             args => 'No args'},
-	'EXIT'      => {command => \&do_logout,          auth => 2, help => 'Alias for logout',             args => 'No args'},
-	'SHUTDOWN'	=> {command => \&do_shutdown,        auth => 3, help => 'Clean up and exit',            args => 'No args'},
+	'LOGOUT'    => {command => \&do_logout,          auth => 0, help => 'Disconnect a session (telnet only)', args => 'No args'},
+	'QUIT'      => {command => \&do_logout,          auth => 0, help => 'Alias for logout',             args => 'No args'},
+	'EXIT'      => {command => \&do_logout,          auth => 0, help => 'Alias for logout',             args => 'No args'},
+	'SHUTDOWN'  => {command => \&do_shutdown,        auth => 3, help => 'Clean up and exit',            args => 'No args'},
 	'LIST'      => {command => \&do_list,            auth => 2, help => 'List existing sessions',       args => 'No args'},
 	'LABEL'     => {command => \&do_label,           auth => 3, help => 'Print a punched tape label',   args => 'label-text (optional)'},
 	'TELNET'    => {command => \&do_telnet,          auth => 3, help => 'Connect to a telnet server',   args => 'hostname (optional) port (optional)'},
-	'EVAL'	    => {command => \&do_eval,            auth => 3, help => 'Execute perl code',            args => 'perl-code'},
+	'EVAL'      => {command => \&do_eval,            auth => 3, help => 'Execute perl code',            args => 'perl-code'},
 	'PROMPT'    => {command => \&do_prompt,          auth => 2, help => 'Change the prompt mode for this session', args => 'On/Off'},
 	'DEBUG'     => {command => \&do_debug,           auth => 2, help => 'View/Change debug settings',       args => '0,1,2,3 (optional) -or- SESSION session-id (to copy to session)'},
 	'SOURCE'    => {command => \&do_source,          auth => 2, help => 'Change the source of a session',   args => 'source-session (optional) -or- source-session session-id (to set the source of another session)'},
@@ -484,6 +447,7 @@ my %aActionCommands = (
 	'TARGET'    => {command => \&do_target,          auth => 2, help => 'Change the target of a session' ,  args => 'target-session (optional) -or- target-session session-id (to set the target of another session)'},
 	'CHAT'      => {command => \&do_chat,            auth => 2, help => 'Change the source and target of your session', args => 'session-id -or- ALL'},
 	'AUTH'      => {command => \&do_auth,            auth => 3, help => 'Switches a session to authorized', args => 'session-id'},
+	'INVERT'    => {command => \&do_invert,          auth => 3, help => 'Changes direction of a telnet session', args => 'session-id IN/OUT (optional)'},
 	'HMPIPE'    => {command => \&do_hmpipe,          auth => 2, help => 'Switches a session to piped mode (No prompt, no echo)', args => 'No args'},
 	'USER'      => {command => \&do_user,            auth => 2, help => 'Change your username',             args => 'username'},
 	'ABORT'     => {command => \&do_abort,           auth => 2, help => 'Abort current actions',            args => 'No args'},
@@ -492,6 +456,7 @@ my %aActionCommands = (
 	'CONFIG'    => {command => \&do_config,          auth => 3, help => 'Change a config setting',          args => 'config-name config-value'},
 	'CONFIGS'   => {command => \&do_configs,         auth => 3, help => 'Show config settings',             args => 'search-start (optional)'},
 	'SAVECONFIG'=> {command => \&do_saveconfig,      auth => 3, help => 'Save config file',                 args => 'No args'},
+	'PORT'      => {command => \&do_port,            auth => 3, help => 'Change serial port configs',       args => 'port bauds word-parity-stop code (optional)'},
 	'SERIALINIT'=> {command => \&serial_init,        auth => 3, help => 'Initialize the serial port',       args => 'No args'},
 	'KICK'      => {command => \&do_kick,            auth => 3, help => 'Kick a telnet session',            args => 'session-id'},
 	'HOSTCMD'   => {command => \&do_host_command,    auth => 3, help => 'Execute command on host',          args => 'console-command'},
@@ -499,6 +464,7 @@ my %aActionCommands = (
 	'SEND'      => {command => \&do_send,            auth => 3, help => 'Send a message to a target without source label',     args => 'target message -or- target command'},
 	'SENDFILE'  => {command => \&do_sendfile,        auth => 3, help => 'Send file contents to a target without source label', args => 'target filename'},
 	'MSN'       => {command => \&do_msn,             auth => 2, help => 'Interact with MSN (See help)',     args => 'On/Off'},
+	'HMNET'     => {command => \&do_hmnet,           auth => 3, help => 'Interact with HMNET (See help)',   args => 'On/Off/List'},
 	'MSNLIST'   => {command => \&do_msnlist,         auth => 2, help => 'Show the MSN contact list',        args => 'No args'},
 	'BANNER'    => {command => \&do_banner,          auth => 2, help => 'Generate a banner',                args => 'banner-text'},
 	'CHECKMAIL' => {command => \&do_email_fetch,     auth => 3, help => 'Check POP email',                  args => 'No args'},
@@ -511,7 +477,7 @@ my %aActionCommands = (
 	'RAW5BIT'   => {command => \&do_raw_5bit,        auth => 2, help => 'Test Raw 5 bits',                  args => 'No args'},
 	'RAW6BIT'   => {command => \&do_raw_6bit,        auth => 2, help => 'Test Raw 6 bits',                  args => 'No args'},
 	'URL'       => {command => \&do_url,             auth => 2, help => 'Get any FTP/HTTP URL',             args => 'url'},
-	'FTP'       => {command => \&do_url,             auth => 2, help => 'Get any FTP/HTTP URL',             args => 'url'},
+	'FTP'       => {command => \&do_ftp,             auth => 2, help => 'Get any FTP (PASV) URL',           args => 'url'},
 	'WEATHER'   => {command => \&do_weather,         auth => 2, help => 'Get NOAA weather report',          args => '2-letter-state city'},
 	'ART'       => {command => \&do_art,             auth => 2, help => 'Get RTTY ART images',              args => 'path'},
 	'QUOTE'     => {command => \&do_quote,           auth => 2, help => 'Get stock quotes',                 args => 'stock-id -or- sotck-id stock-id ...'},
@@ -624,9 +590,7 @@ sub set_end_of_line {
     $end_of_line = $b_cr . $b_cr x $aConfigs{TtyExtraCr} . $b_lf x $aConfigs{TtyExtraLf} . $ltrs. $ltrs x $aConfigs{TtyExtraLtrs};
 }
 
-# Select only one or zero of these
-my $xlate_lf = 1;	# Translate ascii CR to CR/LF
-my $xlate_cr = 0;	# Translate ascii LF to CR/LF
+
 
 my $ascii_end_of_line = "\015\012";
 
@@ -655,15 +619,17 @@ my $oSerialPort;
 
 # Windowing variables
 my $oTkMainWindow;         # Main window
+my $bTkEnabled       = 1;  # Will be disabled in ConsoleOnly mode (We need this as a global var instead of a changeable config)
 my $sInputValue      = ''; # Text entered in via keyboard in text box
 my $oTkTextarea;           # Displayed text window
-my $oTkConfigRemote;
-my $dialog_about;
+my $oTkAbout;
 my $oTkStatus;
-my $sMainStatus      = '';
-my $sPrinthead;	        # current printhead position
-my $cursor_ch;	        # char under cursor
 
+my $sMainStatus      = '';
+my $sPrinthead;         # current printhead position
+my $sCursorChar;        # char under cursor
+
+# This was not implemented, it might be needed in future versions
 my @custom_menu_items;
 my $custom_menu_title;
 
@@ -690,7 +656,7 @@ my %aStockColumns = (
 	 "Div/Share" => 18,
 	 "Div. Yield" => 19,
 	 "Mkt. Cap" => 20,
- 	 "Exchange" => 21 );                      
+ 	 "Exchange" => 21 );
 
 #-----------------------------------------------------------------------------
 # Command line options
@@ -711,7 +677,7 @@ my %aConfigDefinitions = (
 	EscapeChar      => {help => 'Enable character to use'},
 	EscapeEnabled   => {help => 'Enable cmd escapes'},
 	GuestPassword   => {help => 'Password for GUEST sessions'},
-	LoopCode        => {help => 'Which code set to use'},
+	SerialCode      => {help => 'Which code set to use'},
 	LoopTest        => {help => 'Skip data in-out to loop'},
 	LoopSuppress    => {help => 'Suppress the loop-out -> loop-in echo'},
 	LowercaseLock   => {help => 'Downshift TTY input'},
@@ -720,6 +686,12 @@ my %aConfigDefinitions = (
 	MsnListen       => {help => 'Broadcast msgs from unauthenticated users'},
 	MsnPassword     => {help => 'MSN account password'},
 	MsnUsername     => {help => 'MSN account username'},
+	HMNetName       => {help => 'HMNet Sation Name'},
+	HMNetPass       => {help => 'HMNet Sation Password'},
+	HMNetOwner      => {help => 'HMNet Owner'},
+	HMNetEmail      => {help => 'HMNet Email'},
+	HMNetEnabled    => {help => 'HMNet Enabled (HM Internet Directory)'},
+	HMNetUrl        => {help => 'HMNet URL'},
 	PollingTime     => {help => 'Update polling interval'},
 	RemoteMode      => {help => 'Control from TTY'},
 	RunInProtect    => {help => 'Protect from msgs overriding TTY input (secs)'},
@@ -741,6 +713,8 @@ my %aConfigDefinitions = (
 	TtyExtraCr      => {help => 'How many extra CR to add on new line',   command => \&set_end_of_line},
 	TtyExtraLf      => {help => 'How many extra LF to add on new line',   command => \&set_end_of_line},
 	TtyExtraLtrs    => {help => 'How many extra LTRS to add on new line', command => \&set_end_of_line},
+	TtyTranslateCR  => {help => 'Translate CR to CRLF'},
+	TtyTranslateLF  => {help => 'Translate LF to CRLF'},
 	UnshiftOnSpace  => {help => 'Unshift on space'},
 	WeatherBase     => {help => 'Weather URL base'},
 	X10Auto         => {help => 'X10 automatic motor control'},
@@ -810,19 +784,19 @@ my %CODES = (
 
 # USTTY
 $CODES{'USTTY'}->{'FROM-LTRS'} = {   # NOTES: \xa = LF \xd = CR \x7 = BELL
-    "\001" => 'E', "\002" => "\xa", "\003" => 'A', "\004" => ' ', "\005" => 'S', "\006" => 'I',
-    "\007" => 'U', "\010" => "\xd", "\011" => 'D', "\012" => 'R', "\013" => 'J', "\014" => 'N', 
-    "\015" => 'F', "\016" => 'C',   "\017" => 'K', "\020" => 'T', "\021" => 'Z', "\022" => 'L', 
-    "\023" => 'W', "\024" => 'H',   "\025" => 'Y', "\026" => 'P', "\027" => 'Q', "\030" => 'O', 
-    "\031" => 'B', "\032" => 'G',   "\034" => 'M', "\035" => 'X', "\036" => 'V'
+	"\001" => 'E', "\002" => "\xa", "\003" => 'A', "\004" => ' ', "\005" => 'S', "\006" => 'I',
+	"\007" => 'U', "\010" => "\xd", "\011" => 'D', "\012" => 'R', "\013" => 'J', "\014" => 'N', 
+	"\015" => 'F', "\016" => 'C',   "\017" => 'K', "\020" => 'T', "\021" => 'Z', "\022" => 'L', 
+	"\023" => 'W', "\024" => 'H',   "\025" => 'Y', "\026" => 'P', "\027" => 'Q', "\030" => 'O', 
+	"\031" => 'B', "\032" => 'G',   "\034" => 'M', "\035" => 'X', "\036" => 'V'
 };
 
 $CODES{'USTTY'}->{'FROM-FIGS'} = {   # NOTES: \xa = LF \xd = CR \x7 = BELL
-    "\001" => "3", "\002" => "\xa", "\003" => "-", "\004" => " ", "\005" => "\x7", "\006" => "8",
-    "\007" => "7", "\010" => "\xd", "\011" => '$', "\012" => "4", "\013" => "'",   "\014" => ",",
-    "\015" => "!", "\016" => ":",   "\017" => "(", "\020" => "5", "\021" => '"',   "\022" => ")",
-    "\023" => "2", "\024" => "#",   "\025" => "6", "\026" => "0", "\027" => "1",   "\030" => "9",
-    "\031" => "?", "\032" => "&",   "\034" => ".", "\035" => "/", "\036" => ";"
+	"\001" => "3", "\002" => "\xa", "\003" => "-", "\004" => " ", "\005" => "\x7", "\006" => "8",
+	"\007" => "7", "\010" => "\xd", "\011" => '$', "\012" => "4", "\013" => "'",   "\014" => ",",
+	"\015" => "!", "\016" => ":",   "\017" => "(", "\020" => "5", "\021" => '"',   "\022" => ")",
+	"\023" => "2", "\024" => "#",   "\025" => "6", "\026" => "0", "\027" => "1",   "\030" => "9",
+	"\031" => "?", "\032" => "&",   "\034" => ".", "\035" => "/", "\036" => ";"
 };
 
 # ITA2
@@ -830,11 +804,11 @@ $CODES{'USTTY'}->{'FROM-FIGS'} = {   # NOTES: \xa = LF \xd = CR \x7 = BELL
 $CODES{'ITA2'}->{'FROM-LTRS'} =  $CODES{'USTTY'}->{'FROM-LTRS'};
 
 $CODES{'ITA2'}->{'FROM-FIGS'} = {
-    "\001" => '3', "\002" => "\xa", "\003" => '-', "\004" => ' ', "\005" => "'",   "\006" => '8',
-    "\007" => '7', "\010" => "\xd", "\011" => '#', "\012" => '4', "\013" => "\x7", "\014" => ',',
-    "\015" => '@', "\016" => ':',   "\017" => '(', "\020" => '5', "\021" => '+',   "\022" => ')',
-    "\023" => '2', "\024" => '$',   "\025" => '6', "\026" => '0', "\027" => '1',   "\030" => '9',
-    "\031" => '?', "\032" => '*',   "\034" => '.', "\035" => '/', "\036" => '='
+	"\001" => '3', "\002" => "\xa", "\003" => '-', "\004" => ' ', "\005" => "'",   "\006" => '8',
+	"\007" => '7', "\010" => "\xd", "\011" => '#', "\012" => '4', "\013" => "\x7", "\014" => ',',
+	"\015" => '@', "\016" => ':',   "\017" => '(', "\020" => '5', "\021" => '+',   "\022" => ')',
+	"\023" => '2', "\024" => '$',   "\025" => '6', "\026" => '0', "\027" => '1',   "\030" => '9',
+	"\031" => '?', "\032" => '*',   "\034" => '.', "\035" => '/', "\036" => '='
 };
 
 # ITA2-S100A
@@ -842,36 +816,36 @@ $CODES{'ITA2'}->{'FROM-FIGS'} = {
 $CODES{'ITA2-S100A'}->{'FROM-LTRS'} =  $CODES{'ITA2'}->{'FROM-LTRS'};
 
 $CODES{'ITA2-S100A'}->{'FROM-FIGS'} = {
-    "\001" => '3', "\002" => "\xa", "\003" => '-', "\004" => ' ', "\005" => "'",   "\006" => '8',
-    "\007" => '7', "\010" => "\xd", "\011" => '#', "\012" => '4', "\013" => "\x7", "\014" => ',',
-    "\015" => '$', "\016" => ':',   "\017" => '(', "\020" => '5', "\021" => '+',   "\022" => ')',
-    "\023" => '2', "\024" => 'Ñ',   "\025" => '6', "\026" => '0', "\027" => '1',   "\030" => '9',
-    "\031" => '?', "\032" => '*',   "\034" => '.', "\035" => '/', "\036" => '='
+	"\001" => '3', "\002" => "\xa", "\003" => '-', "\004" => ' ', "\005" => "'",   "\006" => '8',
+	"\007" => '7', "\010" => "\xd", "\011" => '#', "\012" => '4', "\013" => "\x7", "\014" => ',',
+	"\015" => '$', "\016" => ':',   "\017" => '(', "\020" => '5', "\021" => '+',   "\022" => ')',
+	"\023" => '2', "\024" => 'Ñ',   "\025" => '6', "\026" => '0', "\027" => '1',   "\030" => '9',
+	"\031" => '?', "\032" => '*',   "\034" => '.', "\035" => '/', "\036" => '='
 };
 
 # TTS-M20
 # Bill Buzbee: 6-bit code used on my Model 20.  This is *not* exactly the same code that is shown in the Model 20 manual 
 $CODES{'TTS-M20'}->{'FROM-LTRS'} = {
-    "\001" => 'e',   "\002" => "\xa", "\003" => 'a', "\004" => ' ', "\005" => 's', "\006" => 'i',
-    "\007" => 'u',   "\010" => "\xd", "\011" => 'd', "\012" => 'r', "\013" => 'j', "\014" => 'n',
-    "\015" => 'f',   "\016" => 'c',   "\017" => 'k', "\020" => 't', "\021" => 'z', "\022" => 'l',
-    "\023" => 'w',   "\024" => 'h',   "\025" => 'y', "\026" => 'p', "\027" => 'q', "\030" => 'o',
-    "\031" => 'b',   "\032" => 'g',   "\034" => 'm', "\035" => 'x', "\036" => 'v', "\041" => '3',
-    "\043" => '$',   "\046" => '8',   "\047" => '7', "\050" => "'", "\051" => '-', "\052" => '4',
-    "\053" => "\x7", "\054" => ',',   "\060" => '5', "\063" => "2", "\065" => "6", "\066" => "0",
-    "\070" => "9",   "\072" => ";",   "\074" => ".", "\075" => "1"
+	"\001" => 'e',   "\002" => "\xa", "\003" => 'a', "\004" => ' ', "\005" => 's', "\006" => 'i',
+	"\007" => 'u',   "\010" => "\xd", "\011" => 'd', "\012" => 'r', "\013" => 'j', "\014" => 'n',
+	"\015" => 'f',   "\016" => 'c',   "\017" => 'k', "\020" => 't', "\021" => 'z', "\022" => 'l',
+	"\023" => 'w',   "\024" => 'h',   "\025" => 'y', "\026" => 'p', "\027" => 'q', "\030" => 'o',
+	"\031" => 'b',   "\032" => 'g',   "\034" => 'm', "\035" => 'x', "\036" => 'v', "\041" => '3',
+	"\043" => '$',   "\046" => '8',   "\047" => '7', "\050" => "'", "\051" => '-', "\052" => '4',
+	"\053" => "\x7", "\054" => ',',   "\060" => '5', "\063" => "2", "\065" => "6", "\066" => "0",
+	"\070" => "9",   "\072" => ";",   "\074" => ".", "\075" => "1"
 };
 # Missing codes: \042 \044 \045 \055 \056 \057 \061 \062 \064 \067 \071 \073 \076
 
 $CODES{'TTS-M20'}->{'FROM-FIGS'} = {
 	"\001" => "E",   "\002" => "\xa", "\003" => "A",   "\004" => " ",   "\005" => "S",     "\006" => "I",
-    "\007" => "U",   "\010" => "\xd", "\011" => "D",   "\012" => "R",   "\013" => "J",     "\014" => "N",
-    "\015" => "F",   "\016" => "C",   "\017" => "K",   "\020" => "T",   "\021" => "Z",     "\022" => "L",
-    "\023" => "W",   "\024" => "H",   "\025" => "Y",   "\026" => "P",   "\027" => "Q",     "\030" => "O",
-    "\031" => "B",   "\032" => "G",   "\034" => "M",   "\035" => "X",   "\036" => "V",     "\041" => "3/8",
-    "\043" => "/",   "\046" => "-",   "\047" => "7/8", "\050" => '"',   "\051" => "\%sp3", "\052" => "1/2",
-    "\054" => ",",   "\060" => "5/8", "\063" => "1/4", "\065" => "3/4", "\066" => '?',     "\070" => "&",
-    "\072" => ":",   "\074" => ".",   "\075" => "1/8",
+	"\007" => "U",   "\010" => "\xd", "\011" => "D",   "\012" => "R",   "\013" => "J",     "\014" => "N",
+	"\015" => "F",   "\016" => "C",   "\017" => "K",   "\020" => "T",   "\021" => "Z",     "\022" => "L",
+	"\023" => "W",   "\024" => "H",   "\025" => "Y",   "\026" => "P",   "\027" => "Q",     "\030" => "O",
+	"\031" => "B",   "\032" => "G",   "\034" => "M",   "\035" => "X",   "\036" => "V",     "\041" => "3/8",
+	"\043" => "/",   "\046" => "-",   "\047" => "7/8", "\050" => '"',   "\051" => "\%sp3", "\052" => "1/2",
+	"\054" => ",",   "\060" => "5/8", "\063" => "1/4", "\065" => "3/4", "\066" => '?',     "\070" => "&",
+	"\072" => ":",   "\074" => ".",   "\075" => "1/8",
 };
 # Missing codes: \042 \044 \045 \055 \056 \057 \061 \062 \064 \067 \071 \073 \076
 
@@ -950,6 +924,14 @@ my %aWeatherCities = weather_init();
 	
 	logDebug("Heavy Metal initializing - ".get_datetime()." - please wait\n");
 	
+	# Enabled ConsoleOnly mode
+	if ($aConfigs{ConsoleOnly}){
+		logDebug("Initialization will be in COnsoleOnly mode (No GUI)\n");
+		$bTkEnabled = 0;
+		# We will need to replace the main loop which is done with TK
+		$Modules{'Time::HiRes'}->{required} = 1;
+	}
+	
 	# Load modules dynamically
 	# Find the last one
 	foreach my $sKey (keys(%Modules)){ 
@@ -964,10 +946,15 @@ my %aWeatherCities = weather_init();
 		foreach my $sKey (keys(%Modules)){
 			if (exists($Modules{$sKey}->{'order'}) && ($Modules{$sKey}->{'order'} == $nCount)){
 				my $bLoad = 1;
+				# Check if it must be disabled for ConsoleOnly mode
+				if (!$bTkEnabled && $sKey =~ /^Tk/){
+					$bLoad = 0;
+				}
 				# Check OS to determine if it should be loaded
-				if (exists($Modules{$sKey}->{'os'}) && $Modules{$sKey}->{'os'} ne ''){
+				elsif (exists($Modules{$sKey}->{'os'}) && $Modules{$sKey}->{'os'} ne ''){
 					$bLoad = ($sOS =~ /$Modules{$sKey}->{'os'}/ix);
 				}
+
 				if ($bLoad){
 					logDebug (sprintf("Loading Module %25s ", $sKey));
 					my $sModule = exists($Modules{$sKey}->{'args'}) ? $sKey : $sKey.' '.$Modules{$sKey}->{'args'};
@@ -1038,28 +1025,44 @@ my %aWeatherCities = weather_init();
 	
 	initialize_loop();
 	
-	initialize_windows();
-	
-	redraw_status_window();
+	if ($bTkEnabled){
+		initialize_windows();
+		
+		redraw_status_window();
+	}
+	else{
+		# Lets mark it as disconnected
+		$aSessions[0]->{status} = 0;
+	}
 	
 	serial_init();
 	
 	if ($aConfigs{TelnetEnabled}){
 		telnet_init();
 	}
-
+	
 	if ($aConfigs{MsnEnabled}){
 		msn_init();
 	}
+	
+	logDebug("\nHeavy Metal initialization complete, ".get_datetime()."\n");
+	
+	main_loop();
+	
+	
+	
+	if ($bTkEnabled){
+		MainLoop();
+	}
+	else{
+		while (!$bExitMainLoop){
+			main_loop();
+			Time::HiRes::usleep($polltime);
+		}
+	}
 
-  main_loop();
-  
-  logDebug("\nHeavy Metal initialization complete, ".get_datetime()."\n");
-
-  MainLoop();
-
-	# Closing everything everything
-  serial_close();
+	# Closing everything
+	serial_close();
 
 	if ($rDebugHandle){
 		close($rDebugHandle);
@@ -1152,16 +1155,18 @@ sub initialize_buffers{
 
 sub initialize_windows {
 
-	print "Initialize windows\n";
-    $oTkMainWindow = MainWindow->new(-title => "Heavy Metal TTY Program, v$sGlobalVersion");
-    if ($Modules{'Tk::Icon'}->{loaded} && -e 'heavymetal.ico'){
-    	$oTkMainWindow->setIcon(-file => 'heavymetal.ico');
-    }
+	print "Initialize window\n";
+	$oTkMainWindow = MainWindow->new(-title => "Heavy Metal TTY Program, v$sGlobalVersion");
+	
+	if ($Modules{'Tk::Icon'}->{loaded} && -e 'heavymetal.ico'){
+		$oTkMainWindow->setIcon(-file => 'heavymetal.ico');
+	}
 
-   	# Frame for menus 
-    my $oTkFrameMenu = $oTkMainWindow->Frame->pack(-side => 'top', -fill => 'x');
-   
-   	# Menu items 
+	# Frame for menus 
+	my $oTkFrameMenu = $oTkMainWindow->Frame->pack(-side => 'top', -fill => 'x');
+	
+	# Menu items 
+
 	$oTkFrameMenu->Menubutton(-text=>"File",-tearoff=>0,
 		-menuitems => [
 			[ 'command' => "Send ASCII file to TTY",  -command => sub { do_sendfile(0, '1'); }],
@@ -1186,7 +1191,7 @@ sub initialize_windows {
     		       [ 'command' => "Select All",
     			 -command => \&select_all]])->pack(-side=>'left');
     
-    my $oTkMenuConfig = $oTkFrameMenu->Menubutton(-text=>"Config",-tearoff=>0)->pack(-side=>'left');
+    my $oTkMenuConfig = $oTkFrameMenu->Menubutton(-text=>"TTY Configs",-tearoff=>0)->pack(-side=>'left');
 
     my $oTkMenuCode = $oTkMenuConfig->cascade(-label => "Code",-tearoff=>0);
 
@@ -1195,7 +1200,7 @@ sub initialize_windows {
 			-label    => $CODES{$_}->{label},
 			-command  => \&initialize_loop,
 			-value    => $_, 
-			-variable => \$aConfigs{LoopCode}
+			-variable => \$aConfigs{SerialCode}
 		);
 	}
 	
@@ -1292,8 +1297,8 @@ sub initialize_windows {
     $oTkMenuConfig->checkbutton(-label => "Enable '$aConfigs{EscapeChar}' escapes",    -variable => \$aConfigs{EscapeEnabled});
     $oTkMenuConfig->checkbutton(-label => "Remote mode (from TTY)",  -variable => \$aConfigs{RemoteMode});
     $oTkMenuConfig->checkbutton(-label => "X10 Auto Mode",           -variable => \$aConfigs{X10Auto});
-    $oTkMenuConfig->checkbutton(-label => "ASCII CR => CR/LF",       -variable => \$xlate_cr);
-    $oTkMenuConfig->checkbutton(-label => "ASCII LF => CR/LF",       -variable => \$xlate_lf);
+    $oTkMenuConfig->checkbutton(-label => "ASCII CR => CR/LF",       -variable => \$aConfigs{TtyTranslateCR});
+    $oTkMenuConfig->checkbutton(-label => "ASCII LF => CR/LF",       -variable => \$aConfigs{TtyTranslateLF});
 
 
 
@@ -1306,8 +1311,8 @@ sub initialize_windows {
 	my $oTkMenuInternet = $oTkFrameMenu->Menubutton(-text=>"Internet",-tearoff=>0)->pack(-side=>'left');
 
 	# Internet - Telnet server
-    $oTkMenuInternet->checkbutton(-label => "Enable Telnet server", -variable => \$aConfigs{TelnetEnabled}, -command => \&telnet_toggle);
-    my $oTkMenuTelnet = $oTkMenuInternet->cascade(-label => "Listen port",-tearoff=>0);
+	$oTkMenuInternet->checkbutton(-label => "Enable Telnet server", -variable => \$aConfigs{TelnetEnabled}, -command => \&telnet_toggle);
+	my $oTkMenuTelnet = $oTkMenuInternet->cascade(-label => "Listen port",-tearoff=>0);
 	foreach (23, 1078, 11123, 11124, 11125){
 		$oTkMenuTelnet->radiobutton(
 			-label => $_, 
@@ -1343,9 +1348,21 @@ sub initialize_windows {
 		$oTkMenuHosts->command(-label=>'- To add hosts see README -');
 	}
 	
+	# Internet - HMNET
+	$oTkMenuInternet->separator;
+	#$oTkMenuInternet->checkbutton(-label => "Enable HMNet directory", -command => \&do_hmnet, -variable => \$aConfigs{HMNetEnabled});
+	$oTkMenuInternet->radiobutton(-label => "Enable HMNet",  -value => "$aConfigs{EscapeChar}HMNET ON\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
+	$oTkMenuInternet->radiobutton(-label => "Disable HMNet",  -value => "$aConfigs{EscapeChar}HMNET OFF\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
+	$oTkMenuInternet->radiobutton(-label => "Show HMNet configs",  -value => "$aConfigs{EscapeChar}HMNET CONFIGS\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
+	$oTkMenuInternet->radiobutton(-label => "List HMNet stations", -value => "$aConfigs{EscapeChar}HMNET LIST\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
+
+	
 	# Internet - MSN
 	$oTkMenuInternet->separator;
-    $oTkMenuInternet->checkbutton(-label => "Enable MSN client", -variable => \$aConfigs{MsnEnabled}, -command => \&msn_toggle);
+#	$oTkMenuInternet->checkbutton(-label => "Enable MSN client", -variable => \$aConfigs{MsnEnabled}, -command => \&msn_toggle);
+	$oTkMenuInternet->radiobutton(-label => "Enable MSN client", -value => "$aConfigs{EscapeChar}MSN ON\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
+	$oTkMenuInternet->radiobutton(-label => "Disable MSN client", -value => "$aConfigs{EscapeChar}MSN OFF\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
+	$oTkMenuInternet->radiobutton(-label => "Show MSN configs", -value => "$aConfigs{EscapeChar}CONFIGS MSN\n", -command  => \&add_text_from_host, -variable => \$sInputValue);
 
 	# Internet - Email
 	$oTkMenuInternet->separator();
@@ -1438,9 +1455,9 @@ sub initialize_windows {
 		}
 	}
 
-    $oTkMenuWeather->separator();
-    $oTkMenuWeather->command(-label=>'- Cities by state -');
-    foreach my $sub_label (sort(keys %aWeatherCities)) {
+	$oTkMenuWeather->separator();
+	$oTkMenuWeather->command(-label=>'- Cities by state -');
+	foreach my $sub_label (sort(keys %aWeatherCities)) {
 		my $oTkMenuState = $oTkMenuWeather->cascade(-label=>$sub_label,-tearoff=>0);
 		foreach my $city (sort(keys %{$aWeatherCities{$sub_label}})) {
 			$oTkMenuState->radiobutton(
@@ -1448,8 +1465,8 @@ sub initialize_windows {
 				-variable => \$sInputValue,
 				-command  => \&add_text_from_host,
 				-value    => "$aConfigs{EscapeChar}WEATHER $sub_label $aWeatherCities{$sub_label}->{$city}\n");
-        }
-    }
+		}
+	}
 
 	$oTkFrameMenu->Menubutton(-text => "Cancel", -tearoff => 0, -menuitems => [
 			[ 'command' => "Cancel action",       -command => \&abort_action],
@@ -1531,31 +1548,31 @@ sub initialize_windows {
 
 	# Status line     
 	$sMainStatus = " - Initialization -";
-    $oTkStatus  = $oTkMainWindow->Label(-text=> $sMainStatus, -relief => 'ridge', -height => 2, -justify => 'center', -padx => 0)->pack(-side=>'bottom',-fill=>'x');
+	$oTkStatus  = $oTkMainWindow->Label(-text=> $sMainStatus, -relief => 'ridge', -height => 2, -justify => 'center', -padx => 0)->pack(-side=>'bottom',-fill=>'x');
 
  	# Frame for text entry
-    my $oTkFrame = $oTkMainWindow->Frame->pack(-side => 'bottom', -fill => 'x');
+	my $oTkFrame = $oTkMainWindow->Frame->pack(-side => 'bottom', -fill => 'x');
 
 	# Label, entry box & enter button
 	$oTkFrame->Label(-text=> "Enter text here=>")->pack(-side=>'left');
-    
-    my $oTkInput = $oTkFrame->Entry(-textvariable => \$sInputValue,)->pack(-side=>'left',-anchor => 'w', -fill => 'x', -expand => 1);
+	
+	my $oTkInput = $oTkFrame->Entry(-textvariable => \$sInputValue,)->pack(-side=>'left',-anchor => 'w', -fill => 'x', -expand => 1);
 	$oTkInput->focus();
 	$oTkInput->bind('<Return>' => sub { $sInputValue .= "\n" ; add_text_from_host();});
-    
+
 	$oTkFrame->Button(-text => "No <cr>", -command =>\&add_text_from_host)->pack(-side => 'right');
 
-   
+
 	# Text display window	
-    $oTkTextarea = $oTkMainWindow->Scrolled('ROText',-setgrid=>'true',-width=>"$aConfigs{Columns}",-height=>'24', -scrollbars=>'se')->pack(-expand=>'yes',-fill=>'both');
+	$oTkTextarea = $oTkMainWindow->Scrolled('ROText',-setgrid=>'true',-width=>$aConfigs{Columns}+4,-height=>'24', -scrollbars=>'se')->pack(-expand=>'yes',-fill=>'both');
 
 	# Init insertion vars
 	$sPrinthead = "1.0";
-	$cursor_ch = undef;
+	$sCursorChar = undef;
 
 	# Add pseudo block cursor
 	$oTkTextarea->tagConfigure('tagCursor', -background => 'blue', -foreground => 'black');
-    
+
 	$oTkTextarea->tagConfigure('tagSent',   -foreground => 'green');
 	$oTkTextarea->tagConfigure('tagAction', -foreground => 'red');
 	$oTkTextarea->tagRaise('tagAction');
@@ -1565,15 +1582,15 @@ sub initialize_windows {
 }
 
 sub bytes_pending {
-    my $BlockingFlags;
-    my $InBytes;
-    my $LatchErrorFlags;
-    my $OutBytes = 0;
-
-    if ($oSerialPort) {
-        ($BlockingFlags, $InBytes, $OutBytes, $LatchErrorFlags) = $oSerialPort->{'status'};
-    }
-    return $OutBytes + length($aSessions[1]->{RAW_IN}) + length($aSessions[1]->{RAW_OUT});
+	my $BlockingFlags;
+	my $InBytes;
+	my $LatchErrorFlags;
+	my $OutBytes = 0;
+	
+	if ($oSerialPort) {
+		($BlockingFlags, $InBytes, $OutBytes, $LatchErrorFlags) = $oSerialPort->{'status'};
+	}
+	return $OutBytes + length($aSessions[1]->{RAW_IN}) + length($aSessions[1]->{RAW_OUT});
 }
 
 
@@ -1586,15 +1603,15 @@ sub bytes_pending {
 #     
 
 sub process_pending_commands {
-    my $did_nothing = 1;
-    my $bytes_left  = bytes_pending();
-    my $reconfig    = 0;
-      
-    $oTkStatus->configure(-text => "$sMainStatus - Bytes: $bytes_left");
-
-    if ($reconfig) {
+	my $did_nothing = 1;
+	my $bytes_left  = bytes_pending();
+	my $reconfig    = 0;
+	
+	display_status("$sMainStatus - Bytes: $bytes_left");
+	
+	if ($reconfig) {
 		redraw_status_window();
-    }
+	}
 
 	for (my $i=0;$i < 10;$i++) {
 		while ($aSessions[0]->{command} eq '' && $aSessions[0]->{input_type} eq '' && (bytes_pending() == 0 && $sCurrentCommand ne '')){
@@ -1612,7 +1629,7 @@ sub process_pending_commands {
 			$sCurrentCommand = '';
 			
 			$did_nothing = 0;	# Did something
-        }
+		}
 
 		while ($sCurrentCommand eq '' && (scalar @aCommands != 0)){
 			$sCurrentCommand = shift(@aCommands);
@@ -1623,20 +1640,23 @@ sub process_pending_commands {
 			last;
 		}
 	}
-    return $did_nothing; # Nothing to do
+	return $did_nothing; # Nothing to do
 }
 
 sub display_char { 
-    (my $c, my $sTag) = @_;
-    
+	(my $c, my $sTag) = @_;
+
 	my $curr_line;
 	my $curr_column;
 	my $end_line;
 	my $end_column;
 	
+	if (!$bTkEnabled){
+		return;
+	}
 	
 	if ($aConfigs{Debug} > 2){ logDebug(' DIS: '. debug_char($c) .' ('.ord($c).')'); }
-			
+	
 	# Ignore bells
 	if ($c eq "\a"){
 		return 0;
@@ -1644,13 +1664,13 @@ sub display_char {
 	
 	if ($char_delay) {
 		$oTkMainWindow->after($char_delay);
-    }
+	}
 
 	$oTkTextarea->delete($sPrinthead, "$sPrinthead + 1 char");
 	
-	if (defined($cursor_ch)) {
-		$oTkTextarea->insert("$sPrinthead",$cursor_ch);
-		$cursor_ch = undef;
+	if (defined($sCursorChar)) {
+		$oTkTextarea->insert("$sPrinthead", $sCursorChar);
+		$sCursorChar = undef;
 	}
 	
 	if ($c eq $lf || $c eq $cr || $c eq $bs){
@@ -1709,9 +1729,9 @@ sub display_char {
 		}
 	}
 
-	$cursor_ch = $oTkTextarea->get("$sPrinthead","$sPrinthead + 1 char");
-	if ($cursor_ch eq "\n") {
-		$cursor_ch = undef;
+	$sCursorChar = $oTkTextarea->get("$sPrinthead","$sPrinthead + 1 char");
+	if ($sCursorChar eq "\n") {
+		$sCursorChar = undef;
 	}
 	else {
 		$oTkTextarea->delete("$sPrinthead","$sPrinthead + 1 char");
@@ -1727,18 +1747,25 @@ sub display_line {
 	}
 }
 
+sub display_status {
+	(my $text) = @_;
+	if (defined($oTkStatus)){
+		$oTkStatus->configure(-text => $text, -justify => 'center');
+		$oTkMainWindow->update();
+	}
+}
 
 # Main I/O
 sub process_pending_io {
 
-    my $res = 1; # Assume nothing to do
-    
-    # NOTE: With some minor changes (i.e. moving all confs to the session) this would support n TTYs
-    
-    # SERIAL -> TTY-RAW-IN
-    if (!$aConfigs{LoopTest}){
-    	$res = process_serial_rawin($res);
-    }
+	my $res = 1; # Assume nothing to do
+	
+	# NOTE: With some minor changes (i.e. moving all confs to the session) this would support n TTYs
+	
+	# SERIAL -> TTY-RAW-IN
+	if (!$aConfigs{LoopTest}){
+		$res = process_serial_rawin($res);
+	}
 
 	# TTY-RAW-IN -> TTY-IN
 	$res = process_rawin_ttyin($res);
@@ -1759,7 +1786,7 @@ sub process_pending_io {
 	$res = process_rawout_serial($res);
 	
 	# TELNET
-	if ($aConfigs{TelnetEnabled}){
+	if ($nTelnetSockets > 0){
 		telnet_io();
 	}
 	
@@ -1786,7 +1813,7 @@ sub process_serial_rawin{
 			if ($aConfigs{Debug} > 2){ 
 				for ($n = 0; $n < length($sLine); $n++){
 					$c = substr($sLine, $n, 1);
-					logDebug(sprintf("\n%-8s -> %-8s %03d %3s ", 'SERIAL','RAW_IN', ord($c), debug_char($c, 1), $aConfigs{LoopCode}));
+					logDebug(sprintf("\n%-8s -> %-8s %03d %3s ", 'SERIAL','RAW_IN', ord($c), debug_char($c, 1), $aConfigs{SerialCode}));
 				}
 			}
 			
@@ -1835,7 +1862,7 @@ sub process_rawin_ttyin{
 				}
 			}
 
-			if ($aConfigs{LoopCode} eq "ASCII" ) {
+			if ($aConfigs{SerialCode} eq "ASCII" ) {
 				$d = $c;
 			}
 			else {
@@ -1847,10 +1874,10 @@ sub process_rawin_ttyin{
 					$rcv_shift = $ltrs;
 				}
 				if ($rcv_shift eq $ltrs) {
-					$d = $CODES{$aConfigs{LoopCode}}->{'FROM-LTRS'}->{$c}
+					$d = $CODES{$aConfigs{SerialCode}}->{'FROM-LTRS'}->{$c}
 				}
 				else {
-					$d = $CODES{$aConfigs{LoopCode}}->{'FROM-FIGS'}->{$c}
+					$d = $CODES{$aConfigs{SerialCode}}->{'FROM-FIGS'}->{$c}
 					#$d = $from_figs_tab->{$c};
 				}
 				if (!defined($d)) {
@@ -1944,7 +1971,7 @@ sub process_rawout_serial{
 			# !!! I had to remove here a column check, because I realizad that the column count is being done in the wrong place
 			if ($aConfigs{RunInProtect} > 0 && length($thisSession->{IN}) > 0 &&  $thisSession->{runin_count} == 0){ #$thisSession->{column} > 0 &&
 				#$thisSession->{runin_count} = $thisSession->{rx_count};
-				if ($aConfigs{LoopCode} eq "ASCII") {
+				if ($aConfigs{SerialCode} eq "ASCII") {
 					$thisSession->{RAW_OUT} = $ascii_end_of_line . $thisSession->{RAW_OUT} . $thisSession->{IN};
 				}
 				else{
@@ -2039,7 +2066,7 @@ sub process_ttyout_rawout{
 		# RAWMODE OFF
 		if (!$thisSession->{'raw_mode'}){
 					
-			if ($aConfigs{LoopCode} ne "ASCII") {
+			if ($aConfigs{SerialCode} ne "ASCII") {
 				$thisSession->{RAW_OUT} .= $ltrs;
 			}
 
@@ -2050,17 +2077,17 @@ sub process_ttyout_rawout{
 			
 				if ($aConfigs{Debug} > 2){ logDebug(sprintf("\n%-8s -> %-8s %03d %3s ", 'TTY-OUT','RAW_OUT', ord($c), debug_char($c))); }
 
-				if ($CODES{$aConfigs{LoopCode}}->{upshift}) {
+				if ($CODES{$aConfigs{SerialCode}}->{upshift}) {
 					$c = uc($c);
 				}
 				
 				
 				# PROCESS ASCII LOOP
-				if ($aConfigs{LoopCode} eq "ASCII" ) {
-					if ($c eq $lf && $xlate_lf){
+				if ($aConfigs{SerialCode} eq "ASCII" ) {
+					if ($c eq $lf && $aConfigs{TtyTranslateLF}){
 						$d = $ascii_end_of_line;
 					}
-					elsif ($c eq $cr && $xlate_cr) {
+					elsif ($c eq $cr && $aConfigs{TtyTranslateCR}) {
 						$d = $ascii_end_of_line;
 					}
 					else {
@@ -2141,19 +2168,19 @@ sub process_ttyout_rawout{
 								$d = $end_of_line;
 								$xmit_shift = $ltrs;
 							}
-							elsif (exists($CODES{$aConfigs{LoopCode}}->{'TO-LTRS'}->{$c})) {
+							elsif (exists($CODES{$aConfigs{SerialCode}}->{'TO-LTRS'}->{$c})) {
 								if ($xmit_shift eq $figs) {
 									$thisSession->{RAW_OUT} .= $ltrs;
 									$xmit_shift = $ltrs;
 								}
-								$d = $CODES{$aConfigs{LoopCode}}->{'TO-LTRS'}->{$c}
+								$d = $CODES{$aConfigs{SerialCode}}->{'TO-LTRS'}->{$c}
 							}
-							elsif (exists($CODES{$aConfigs{LoopCode}}->{'TO-FIGS'}->{$c})) {
+							elsif (exists($CODES{$aConfigs{SerialCode}}->{'TO-FIGS'}->{$c})) {
 								if ($xmit_shift eq $ltrs) {
 									$thisSession->{RAW_OUT} .= $figs;
 									$xmit_shift = $figs;
 								}
-								$d = $CODES{$aConfigs{LoopCode}}->{'TO-FIGS'}->{$c}
+								$d = $CODES{$aConfigs{SerialCode}}->{'TO-FIGS'}->{$c}
 							}
 							else {
 								$d = undef;
@@ -2177,7 +2204,7 @@ sub process_ttyout_rawout{
 					$thisSession->{RAW_OUT} .= $d;
 					
 					# Protect from overstrike
-					if ($aConfigs{LoopCode} eq "ASCII"){
+					if ($aConfigs{SerialCode} eq "ASCII"){
 						if (index($d, $cr) >= 0){
 							$thisSession->{column} = 0;
 						}
@@ -2388,7 +2415,9 @@ sub process_host_window{
 				last;
 			}
 		}
-		$oTkTextarea->see('end');
+		if ($bTkEnabled){
+			$oTkTextarea->see('end');
+		}
 	}
 	return $res;
 }
@@ -2458,17 +2487,23 @@ sub main_loop {
 		
 		if (time() > $nShutDown){
 			print "\nShutdown complete! Bye Bye!";
-			$oTkMainWindow->destroy();
+			if ($bTkEnabled){
+				$oTkMainWindow->destroy();
+			}
+			$bExitMainLoop = 1;
 		}
 	}
 
-	$oTkMainWindow->after($polltime, \&main_loop);
+	if ($bTkEnabled){
+		$oTkMainWindow->after($polltime, \&main_loop);
+	}
 }
 
 
 # This wil handle clean exits from CTRL-C
 sub main_exit{
 	$nShutDown = 1;
+	$bExitMainLoop = 1;
 }
 
 #---------------------------------------------------------------------------
@@ -2574,11 +2609,13 @@ sub add_text_from_host {
 	}
 }
 
+
+
 #---------------------------------------------------------------------------
 # Util
 #---------------------------------------------------------------------------
 sub do_about {
-	my $dialog_about = $oTkMainWindow->Dialog(
+	my $oTkAbout = $oTkMainWindow->Dialog(
 		-title   => 'About HeavyMetal',
 		-width   => 35,
 		-bitmap  => 'info',
@@ -2587,11 +2624,9 @@ sub do_about {
 		-text    =>  "Version $sGlobalVersion ($sGlobalRelease)\n\nHeavyMetal is a simple application to interface teletype machines to computers and the internet.\n\nInitially made by Bill Buzbee - Oct 2005\n\nCompletely rewritten into v3.0 by Javier Albinarrate LU8AJA - May 2010\n\nSee:\n http://lu8aja.com.ar/heavymetal.html\n http://github.com/lu8aja/HeavyMetal"
 	);
 
-	$dialog_about->configure(
-		
-    );
-    
-	my $res = $dialog_about->Show;
+	$oTkAbout->configure();
+	
+	my $res = $oTkAbout->Show;
 }
 
 sub do_repeat {
@@ -2691,7 +2726,7 @@ sub process_batch{
 
 
 sub redraw_status_window {
-	if (defined($oTkStatus)) {
+	if (defined($oTkStatus)){
 		my $nStopBits;
 		my $pseudo_wpm = int($nGlobalWPM);
 
@@ -2715,7 +2750,7 @@ sub redraw_status_window {
 		
 		$sMainStatus .= "\n";
 		
-		$sMainStatus .= "LC lock:$mode - Code:$aConfigs{LoopCode} - ";
+		$sMainStatus .= "LC lock:$mode - Code:$aConfigs{SerialCode} - ";
 		
 		if ($oSerialPort) {
 			$sMainStatus .= "Port:$aConfigs{SerialPort} - WPM:$pseudo_wpm - B:$nGlobalBaud - S:$nStopBits - W:$aConfigs{SerialWord} - P:".uc(substr($aConfigs{SerialParity}, 0, 1));
@@ -2724,9 +2759,8 @@ sub redraw_status_window {
 			$sMainStatus .= "*Port Error:$aConfigs{SerialPort}*";
 		}
 
-		$oTkStatus->configure(-text => $sMainStatus, -justify => 'center');
+		display_status($sMainStatus);
 	}
-
 }
 
 
@@ -2807,6 +2841,7 @@ sub serial_uart_init {
 			$oSerialPort->baudrate($nGlobalBaud)	|| local_error("Failed setting baudrate $nGlobalBaud");
 		}
 		
+		print "\nBaud Rate: $nGlobalBaud\n";
 		$oSerialPort->parity($aConfigs{SerialParity})	|| local_error("Failed setting parity $aConfigs{SerialParity}");
 		$oSerialPort->databits($aConfigs{SerialWord})	|| local_error("Failed setting word size $aConfigs{SerialWord}");
 
@@ -2856,7 +2891,7 @@ sub serial_uart_init {
 
 
 sub serial_init_with_address{
-	# We guess the address
+	# We guess the address, this actually only applies to windows, not to linux
 	
 	if ($aConfigs{SerialPort}){
 		$aConfigs{SerialAddress} = $aPortAddresses{ $aConfigs{SerialPort} };
@@ -2872,114 +2907,120 @@ sub serial_init_with_address{
 }
 
 sub serial_init{
+	my ($idSession, $sCommand, $sTitle) = @_;
 	
-	if ($aConfigs{Debug}) { logDebug("\nInitializing serial port $aConfigs{SerialPort}");}
+	if (!defined($idSession)){
+		$idSession = 1;
+	}
 	
 	if ($oSerialPort) {
-		serial_close();
+		serial_close($idSession);
 	}
 
-	if ($aConfigs{SerialPort}){
-		serial_open();
-		
-		if ($oSerialPort) {
+	if (!$aConfigs{SerialPort} || $aConfigs{SerialPort} eq "Disabled"){
+		$oSerialPort = 0;
+		local_warning("TTY Port disabled");
+		$aSessions[$idSession]->{status} = 0;
+	}
+	else{	
+		if ($aConfigs{Debug}) { logDebug("\nOpening port $aConfigs{SerialPort}\n");}
 	
-			my $nStopBits = ( $aConfigs{SerialStop} == 1 ) ? 1 : ( $aConfigs{SerialWord} == 5) ? 1.5 : 2;
+		if ($bWindows) { 
+			$oSerialPort = Win32::SerialPort->new($aConfigs{SerialPort},1);
+		}
+		else {
+			$oSerialPort = Device::SerialPort->new($aConfigs{SerialPort});
+			if ($oSerialPort) {
+				my $res = `setserial $aConfigs{SerialPort} spd_cust divisor $aConfigs{SerialDivisor} 2>&1`;
+			}
+		}
+		if ($oSerialPort){
+			$aSessions[$idSession]->{status} = 1;
+			$aSessions[$idSession]->{address} = $aConfigs{SerialPort};
+		}
+		else{
+			local_error("Failed open port $aConfigs{SerialPort}");
+			if ($aConfigs{Debug}) { logDebug("ERROR: Could not open serial port $aConfigs{SerialPort}\n");}
+			$aSessions[$idSession]->{status} = 0;
+		}
+	}
+
+	if ($oSerialPort) {
+
+		# 38400 was causing some trouble, so 1200 chosen
+		my $nDefaultBauds = 1200;
+		my $nStopBits = ( $aConfigs{SerialStop} == 1 ) ? 1 : ( $aConfigs{SerialWord} == 5) ? 1.5 : 2;
 	    
-			$nGlobalBaud = int( (1843200/16) / $aConfigs{SerialDivisor} );
+		$nGlobalBaud = int( (1843200/16) / $aConfigs{SerialDivisor} );
 	
-			# to avoid some conflicts, first reset port to innocuous state
-			$oSerialPort->stopbits(1);
-			$oSerialPort->databits(8);
-			$oSerialPort->parity("none");
-			$oSerialPort->baudrate(38400);
+		# to avoid some conflicts, first reset port to innocuous state
+		$oSerialPort->stopbits(1);
+		$oSerialPort->databits(8);
+		$oSerialPort->parity("none");
+		$oSerialPort->baudrate($nDefaultBauds);
 	
-			# now, set to desired values.  Must do word size before stop bits
-			if ($aConfigs{SerialSetserial}) {
-				#$oSerialPort->baudrate(38400)	|| local_error("Failed setting baudrate 38400");
-			}
-			else {
-				$oSerialPort->baudrate($nGlobalBaud)	|| local_error("Failed setting baudrate $nGlobalBaud");
-			}
+		# now, set to desired values.  Must do word size before stop bits
+		if ($aConfigs{SerialSetserial}) {
+			#$oSerialPort->baudrate(38400)	|| local_error("Failed setting baudrate 38400");
+		}
+		else {
+			$oSerialPort->baudrate($nGlobalBaud)	|| local_error("Failed setting baudrate $nGlobalBaud");
+		}
 			
-			$oSerialPort->parity($aConfigs{SerialParity})	|| local_error("Failed setting parity $aConfigs{SerialParity}");
-			$oSerialPort->databits($aConfigs{SerialWord})	|| local_error("Failed setting word size $aConfigs{SerialWord}");
-	
-			my $nStopBitsReal = $nStopBits;
-			if (!$bWindows) {
-				$nStopBitsReal = ($nStopBits == 1.5) ? 2 : $nStopBits;
-			}
-			$oSerialPort->stopbits($nStopBitsReal) || local_error("Failed setting stopbits $nStopBitsReal");
-			$oSerialPort->handshake("none")        || local_error("Failed setting handshake");
-			$oSerialPort->write_settings()         || local_error("Failed to write settings");
-	
-			$nGlobalWPM = (($nGlobalBaud / ($aConfigs{SerialWord} + $nStopBits + 1)) * 60) / 6;
-	
-			if ($aConfigs{SerialSetserial}) {	
-				if ($bWindows) {
-					if (!defined($aPortAddresses{ $aConfigs{SerialPort} })) {
-						local_error("Invalid port name - $aConfigs{SerialPort}");
-					}
-					else {
-						my $cmdline;
-						if ($bWindows98) {
-							$cmdline="setdiv $aConfigs{SerialAddress} $aConfigs{SerialDivisor}";
-						}
-						else {
-							$cmdline="allowio /a \"setdiv $aConfigs{SerialAddress} $aConfigs{SerialDivisor}\"";
-						}
+		$oSerialPort->parity($aConfigs{SerialParity})	|| local_error("Failed setting parity $aConfigs{SerialParity}");
+		$oSerialPort->databits($aConfigs{SerialWord})	|| local_error("Failed setting word size $aConfigs{SerialWord}");
 
-						#print $cmdline."\n";
-						my $res = `$cmdline`;
-						#print $res."\n";
-
-					}
-				} 
+		my $nStopBitsReal = $nStopBits;
+		if (!$bWindows) {
+			$nStopBitsReal = ($nStopBits == 1.5) ? 2 : $nStopBits;
+		}
+		$oSerialPort->stopbits($nStopBitsReal) || local_error("Failed setting stopbits $nStopBitsReal");
+		$oSerialPort->handshake("none")        || local_error("Failed setting handshake");
+		$oSerialPort->write_settings()         || local_error("Failed to write settings");
+	
+		$nGlobalWPM = (($nGlobalBaud / ($aConfigs{SerialWord} + $nStopBits + 1)) * 60) / 6;
+	
+		if ($aConfigs{SerialSetserial}) {	
+			if ($bWindows) {
+				if (!defined($aPortAddresses{ $aConfigs{SerialPort} })) {
+					local_error("Invalid port name - $aConfigs{SerialPort}");
+				}
 				else {
-					my $res = `setserial $aConfigs{SerialPort} spd_cust divisor $aConfigs{SerialDivisor} 2>&1`;
-					if (length($res)) {
-						$oSerialPort = 0;
+					my $sCmd = "setdiv $aConfigs{SerialAddress} $aConfigs{SerialDivisor}";
+					if (!$bWindows98) {
+						$sCmd = "allowio /a \"$sCmd\"";
 					}
+					
+					my $sResult = `$sCmd`;
+					if ($aConfigs{Debug} >1) { logDebug("\n$sCmd\n$sResult\n");}
+
+				}
+			} 
+			else {
+				# LINUX
+				my $sCmd    = "setserial $aConfigs{SerialPort} spd_cust divisor $aConfigs{SerialDivisor} 2>&1";
+				my $sResult = `$sCmd`;
+				# Only errors should be retrieved with that redirect
+				if (length($sResult)){
+					$oSerialPort = 0;
+					if ($aConfigs{Debug} >1) { logDebug("\n$sCmd\n$sResult\n");}
 				}
 			}
 		}
 	}
-	else{
-		$aConfigs{SerialAddress} = 0;
-	}
+
 	redraw_status_window();
 }
 
 
-sub serial_open {
-	if ($aConfigs{Debug}) { logDebug("\nOpening port $aConfigs{SerialPort}\n");}
-
-	if ($bWindows) { 
-		$oSerialPort = Win32::SerialPort->new($aConfigs{SerialPort},1);
-	}
-	else {
-		$oSerialPort = Device::SerialPort->new($aConfigs{SerialPort});
-		if ($oSerialPort) {
-			my $res = `setserial $aConfigs{SerialPort} spd_cust divisor $aConfigs{SerialDivisor} 2>&1`;
-		}
-	}
-	if ($oSerialPort){
-		$aSessions[1]->{status} = 1;
-	}
-	else{
-		local_error("Failed open port $aConfigs{SerialPort}");
-		if ($aConfigs{Debug}) { logDebug("ERROR: Could not open serial port $aConfigs{SerialPort}\n");}
-		$aSessions[1]->{status} = 0;
-	}
-}
-
 sub serial_close{
+	my ($idSession, $sCommand, $sTitle) = @_;
 	if ($oSerialPort) {
 		$oSerialPort->close();
 		$oSerialPort = undef;
 		if ($aConfigs{Debug}) { logDebug("\nClosed serial port\n");}
 	}
-	$aSessions[1]->{status} = 0;
+	$aSessions[$idSession]->{status}  = 0;
 }
 
 
@@ -2999,7 +3040,7 @@ sub command_start{
 		if ($aSessions[$idSession]->{command_calls} == 0){
 			message_deliver('SYS', $idSession, "-- CMD: $sTitle --", 0, 1, 1);
 		}
-		$oTkStatus->configure(-text=> "-- CMD: $sTitle --");
+		display_status("-- CMD: $sTitle --");
 	}
 
 	return $aSessions[$idSession]->{command_calls}++;
@@ -3267,9 +3308,10 @@ sub do_weather {
 		$sUrlArgs .= ' '.$sArtCopyOutput;
 	}
 
-    return do_url($idSession, $sUrlArgs, 1);
+	return do_ftp($idSession, $sUrlArgs, 1);
 }
 
+	
 # Get a URL and show its contents, also used as a utility function
 sub do_url {
 	my ($idSession, $sArgs, $bNoTitle) = @_;
@@ -3323,6 +3365,106 @@ sub do_url {
 		command_done($idSession);
 	
 		return ("-- ERROR: Cannot download URL --", 0, 1);
+	}
+}
+
+
+# Get a File by FTP and show its contents, also used as a utility function
+sub do_ftp {
+	my ($idSession, $sArgs, $bNoTitle) = @_;
+	my $sCmd = 'FTP';
+
+	my @aArgs = split(/\s+/, $sArgs);
+	
+	if ($aConfigs{Debug} > 1){ logDebug("\ndo_ftp $idSession: $sArgs");}
+	
+	$bNoTitle = defined($bNoTitle) ? int($bNoTitle) : (defined($aArgs[2]) ? int($aArgs[2]) : 0);
+
+	my $sUrl    = defined($aArgs[0]) ? $aArgs[0] : '';	
+	my $sTarget = defined($aArgs[1]) ? $aArgs[1] : ''; # Target Session
+
+	my $sOut    = '';
+	my $sContents = '';
+	
+	if ($bNoTitle){
+		$aSessions[$idSession]->{command_calls}++;
+	}
+	else{
+		command_start($idSession, $sCmd, 'RETRIEVE FTP FILE');
+	}
+
+	# Get the URL
+	my $sUrl = command_input($idSession, 'url', 'LINE', $sUrl, '', "\aSERVER: ", $sCmd);
+	if ($sUrl eq ''){ return ('', 1); }
+
+	if ($sUrl =~ /ftp:\/\/(.+?)\/(.+\/)(.+)$/i){
+		
+		if (!$bNoTitle){
+			# Make sure the OUT buffer is empty before proceeding
+			my $bReady = command_input($idSession, 'ready', 'OUT-EMPTY', '', '', "-- Loading...\n\n", $sCmd);
+			if ($bReady eq ''){ return ('', 1); }
+		}
+
+		
+		my $sServer   = $1;
+		my $sDir      = $2;
+		my $sFile     = $3;
+		my $sTmpFile  = time();
+		
+    my $oFTP = Net::FTP->new($sServer, Debug => 0);
+    if (!$oFTP){
+    	$sOut = "-- ERROR: Cannot connect to FTP: ".$sServer;
+    }
+    elsif (!$oFTP->login("anonymous",'anonymous@example.com')){
+    	$sOut = "-- ERROR: Cannot login to FTP: ".$oFTP->message;
+    }
+    elsif ($sDir && !$oFTP->cwd('/'.$sDir)){
+    	$sOut = "-- ERROR: Cannot change FTP directory: ".$oFTP->message;
+    }
+		elsif(!$oFTP->pasv()){    
+    	$sOut = "-- ERROR: Cannot switch to PASV: ".$oFTP->message;
+		}
+		elsif(!$oFTP->get($sFile, $sTmpFile)){
+    	$sOut = "-- ERROR: Cannot download file: ".$oFTP->message;
+		}
+		elsif (!open(TMPFILE, $sTmpFile)) {
+			$sOut = "-- ERROR: Could not open temporary file $sTmpFile";
+		}
+		else {
+			$sContents = join("", <TMPFILE>);
+			close (TMPFILE);
+			unlink($sTmpFile);
+		}
+    $oFTP->quit();
+	}
+	else{
+		$sOut = "-- ERROR: Invalid FTP format $sUrl";
+	}
+
+
+	if ($sContents) {
+		$aSessions[$idSession]->{VARS}->{'url'}   = '';
+		$aSessions[$idSession]->{VARS}->{'ready'} = '';
+		
+		command_done($idSession);
+	
+		if ($sTarget){
+			message_send('SYS', $sTarget, $sContents);
+		}
+
+		return ($sContents."\n-- DONE --", 0, 0);
+	
+	}
+	else {
+		$aSessions[$idSession]->{VARS}->{'ready'} = '';
+	
+		command_done($idSession);
+	
+		if (!$sOut){
+			$sOut = "-- ERROR: Cannot download FTP URL --";
+		}
+	
+		return ($sOut, 0, 1);
 	}
 }
 
@@ -3667,6 +3809,53 @@ sub do_configs{
 	return $sOut;
 }
 
+# Change configs for serial port
+sub do_port{
+	my ($idSession, $sArgs, $bNoOutput) = @_;
+	my $sCmd = 'PORT';
+	my @aArgs = split(/\s+/, $sArgs);
+	my $sOut = '';
+	
+	if (!defined($aArgs[0]) || !defined($aArgs[1]) || !defined($aArgs[2])){
+		return '-- ERROR: Usage: PORT PORTNUM BAUD WordParityStop CODE (optional)';	
+	}
+	
+	$aArgs[1] = uc($aArgs[1]); # Baud
+	$aArgs[2] = uc($aArgs[2]); # Word
+	
+	if (!defined($aBaudRates{$aArgs[1]}) && !defined($aBaudRates{'BAUD'.$aArgs[1]})){
+		return '-- ERROR: Unknown Baud Rate';	
+	}
+
+	if($aArgs[2] !~ /^[5678][NOE][12]$/){
+		return '-- ERROR: Unknown word parameters, use (5,6,7,8)(N,E,O)(1,2)';	
+	}
+
+	if(defined($aArgs[3]) && !defined($CODES{uc($aArgs[3])})){
+		return '-- ERROR: Unknown CODE';	
+	}
+
+	if (!defined($aBaudRates{$aArgs[1]})){
+		$aArgs[1] = 'BAUD'.$aArgs[1];
+	}
+		
+	$aConfigs{SerialDivisor} = defined($aBaudRates{$aArgs[1]}) ? $aBaudRates{$aArgs[1]}->{divisor} : $aBaudRates{'BAUD'.$aArgs[1]}->{divisor};
+	$aConfigs{SerialPort}    = $bWindows ? 'COM'.int($aArgs[0]).':' : '/dev/ttyS'.int($aArgs[0]);	
+		
+	$aArgs[2] =~ /^([5678])([NOE])([12])$/;
+	$aConfigs{SerialWord}   = int($1);
+	$aConfigs{SerialParity} = $2 eq 'N' ? 'none' : ($2 eq 'E' ? 'even' : 'odd');
+	$aConfigs{SerialStop}   = int($3);
+
+	if (defined($aArgs[3])){
+		$aConfigs{SerialCode} = uc($aArgs[3]);
+	}
+	
+	serial_init_with_address();
+	
+	return "-- OK: Changed to port $aConfigs{SerialPort} Div:$aConfigs{SerialDivisor} $aArgs[2] $aConfigs{SerialCode}";
+}
+
 # NOTE: This command is not used from the ActionCommands list,
 #       instead it is executed directly in unauthenticated sessions
 sub do_login{
@@ -3696,8 +3885,8 @@ sub do_login{
 				$sOut = 'OK';
 			}
 			else{
-				$aSessions[$idSession]->{'auth'} = $sPass eq $aConfigs{SystemPassword} ? 3 : 2;
-				$aSessions[$idSession]->{'user'} = $sUser;
+				$aSessions[$idSession]->{auth} = $sPass eq $aConfigs{SystemPassword} ? 3 : 2;
+				$aSessions[$idSession]->{user} = $sUser;
 				$sOut = "-- Login OK! Session $idSession - Level $aSessions[$idSession]->{auth}\n   You are ready to send data into the TTY\n   $sSessionsHelp";
 			}
 		}
@@ -3977,7 +4166,7 @@ sub do_target {
 
 	if (!defined($aArgs[0]) || $aArgs[0] eq ''){
 		$sOut = '-- Your current Target is: '.$aSessions[$idSession]->{'target'};
-	}			
+	}
 	else{
 		my $xTarget = $aArgs[0];
 		my $nVal;
@@ -4255,6 +4444,50 @@ sub do_auth {
 	return $sOut;
 }
 
+sub do_invert {
+	my ($idSession, $sArgs) = @_;
+	my $sCmd = 'INVERT';
+	my @aArgs = split(/\s+/, $sArgs);
+	my $sOut = '';
+
+	if (defined($aArgs[0]) && $aArgs[0] =~ /^\d+$/){
+		my $xTarget    = int($aArgs[0]);
+		my $sDirection = defined($aArgs[1]) ? uc($aArgs[1]) : '';
+		my $nVal    = session_get($xTarget, 'direction');
+		if (defined $nVal){
+			if ($sDirection eq ''){
+				# Invert direction
+				$aSessions[$xTarget]->{direction} = $aSessions[$xTarget]->{direction} ? 0 : 1;
+				# AUTH, for outbound = 0 / for inbound = 3
+				$aSessions[$xTarget]->{auth}      = $aSessions[$xTarget]->{direction} ? 0 : 3;
+				$sOut = '-- Session $xTarget is now '. ($aSessions[$xTarget]->{direction} ? 'OUTBOUND' : 'INBOUND');
+			}
+			elsif($sDirection eq 'IN'){
+				# Inbound
+				$aSessions[$xTarget]->{direction} = 0;
+				$aSessions[$xTarget]->{auth}      = 3;
+				$sOut = '-- Session $xTarget is now '. ($aSessions[$xTarget]->{direction} ? 'OUTBOUND' : 'INBOUND');
+			}
+			elsif($sDirection eq 'OUT'){
+				# Outbound
+				$aSessions[$xTarget]->{direction} = 1;
+				$aSessions[$xTarget]->{auth}      = 0;
+				$sOut = '-- Session $xTarget is now '. ($aSessions[$xTarget]->{direction} ? 'OUTBOUND' : 'INBOUND');
+			}
+			else{
+				$sOut = '-- Unknown direction, use IN or OUT. Leave empty to invert';
+			}
+		}
+		else{
+			$sOut = '-- Session not found. Check with command LIST';
+		}
+	}
+	else{
+		$sOut = '-- Missing session ID. Usage: INVERT ID (IN,OUT)';
+	}
+	return $sOut;
+}
+
 sub do_logout{
 	my ($idSession, $sArgs) = @_;
 	my $sCmd = 'LOGOUT';
@@ -4458,14 +4691,110 @@ sub do_help {
 	return $s;
 }
 
+	
+sub do_hmnet {
+	my ($idSession, $sArgs) = @_;
+	my $sCmd  = 'HMNET';
+	
+	my @aArgs = split(/\s+/, $sArgs, 2);
+	my $sOut  = '';
+	
+	my $bUpdate = 0;
+	
+	if (!defined $idSession){
+		$idSession = 0;
+	}
+
+	# Dump the configs
+	if (scalar(@aArgs) == 0 || $aArgs[0] =~ /^configs$/i){
+		$sOut  = "-- HM Net Configs:\n";
+		foreach my $sKey (sort keys %aConfigs){
+			if ($sKey eq 'HMNetEnabled'){
+				$sOut .= sprintf(" %12s: %s\n", $sKey, $aConfigs{$sKey} ? 'ON' : 'OFF');
+			}
+			elsif ($sKey =~ /^HMNet/i && $sKey ne 'HMNetUrl'){
+				$sOut .= sprintf(" %12s: %s\n", $sKey, $aConfigs{$sKey});
+			}
+		}
+	}
+	# Handle ON and OFF
+	elsif ($aArgs[0] =~ /^(ON|OFF|0|1)$/i){
+		if ($aConfigs{HMNetEnabled}){
+			$bUpdate = 1;
+		}
+		$aConfigs{HMNetEnabled} = ($aArgs[0] =~ /^(ON|1)$/i) ? 1 : 0;
+		if ($aConfigs{HMNetEnabled}){
+			$bUpdate = 1;
+		}
+	}
+	# Handle configs
+	elsif ($aArgs[0] =~ /^(Enabled|Name|Pass|Owner|Email|Url)$/i){
+		if (uc($aArgs[0]) eq 'ENABLED'){
+			if ($aConfigs{HMNetEnabled}){
+				$bUpdate = 1;
+			}
+			$aArgs[1] = ($aArgs[1] =~ /^(ON|1)$/i) ? 1 : 0;
+			if ($aArgs[1]){
+				$bUpdate = 1;
+			}
+		}
+		
+		$aConfigs{'HMNet' . ucfirst($aArgs[0])} = $aArgs[1];
+		$sOut .= '-- HMNet New config ' . ucfirst($aArgs[0]).' = '.$aArgs[1];
+	}
+	elsif ($aArgs[0] =~ /^list$/i){
+		$sOut .= "-- HMNet\n";
+		$sOut .= LWP::Simple::get($aConfigs{HMNetUrl}.'?action=list&width='.$aConfigs{Columns});
+	}
+	
+	if ($bUpdate){
+		if (!$aConfigs{HMNetUrl}){
+			$sOut .= "-- HMNet Update\n-- ERROR: Missing URL in config\n";
+		}
+		elsif (!$aConfigs{HMNetName}){
+			$sOut .= "-- HMNet Update\n-- ERROR: Missing Station Name in config\n";
+		}
+		elsif (!$aConfigs{HMNetPass}){
+			$sOut .= "-- HMNet Update\n-- ERROR: Missing Station Pass in config\n";
+		}
+		elsif (!$aConfigs{HMNetOwner}){
+			$sOut .= "-- HMNet Update\n-- ERROR: Missing Owner in config\n";
+		}
+		elsif (!$aConfigs{HMNetEmail}){
+			$sOut .= "-- HMNet Update\n-- ERROR: Missing Email in config\n";
+		}
+		elsif (!$aConfigs{TelnetEnabled}){
+			$sOut .= "-- HMNet Update\n-- ERROR: You don't have TELNET listening in your station\n";
+		}
+		else{
+			my $sUrl = $aConfigs{HMNetUrl} . '?action='. ($aConfigs{HMNetEnabled} ? 'update' : 'delete');
+			$sUrl .= '&name='.URI::Escape::uri_escape($aConfigs{HMNetName});
+			$sUrl .= '&password='.URI::Escape::uri_escape($aConfigs{HMNetPass});
+			$sUrl .= '&owner='.URI::Escape::uri_escape($aConfigs{HMNetOwner});
+			$sUrl .= '&email='.URI::Escape::uri_escape($aConfigs{HMNetEmail});
+			$sUrl .= '&port='.URI::Escape::uri_escape($aConfigs{TelnetPort});
+			
+			$sOut .= "-- HMNet Update: ";
+			$sOut .= LWP::Simple::get($sUrl);
+		}
+	}
+	
+	
+	return $sOut;
+}
+
+
+
+
+
 sub do_telnet {
-    my ($idSession, $sArgs) = @_;
+	my ($idSession, $sArgs) = @_;
 	my $sCmd = 'TELNET';
-    my @aArgs = split(/\s+/, $sArgs);
-    
-    if (!defined $idSession){
-    	$idSession = 0;
-    }
+	my @aArgs = split(/\s+/, $sArgs);
+	
+	if (!defined $idSession){
+		$idSession = 0;
+	}
 
 	# Handle ON and OFF
 	if ($aArgs[0] =~ /^(ON|OFF|0|1)$/i){
@@ -4473,13 +4802,13 @@ sub do_telnet {
 		my $sOut = telnet_toggle($bEnable);
 		return $sOut;
 	}
-    
-    # To avoid problems with the menu, the value has to be set to something, so we set it to a single space in the menu.
-    if ($aSessions[$idSession]->{VARS}->{'telnet_host'} eq ' '){
-    	$aSessions[$idSession]->{VARS}->{'telnet_host'} = '';
-    }
-
-    command_start($idSession, $sCmd, $sCmd);
+	
+	# To avoid problems with the menu, the value has to be set to something, so we set it to a single space in the menu.
+	if ($aSessions[$idSession]->{VARS}->{'telnet_host'} eq ' '){
+		$aSessions[$idSession]->{VARS}->{'telnet_host'} = '';
+	}
+	
+	command_start($idSession, $sCmd, $sCmd);
 	
 	# Get the MSG
 	my $sHost = command_input($idSession, 'telnet_host', 'LINE', $aArgs[0], '^\w[\w\.\-]+\w(\:\d+)?$', "\aHost: ", $sCmd);
@@ -4504,22 +4833,22 @@ sub do_telnet {
 }
 
 sub do_list{
-    my ($idSession, $sArgs) = @_;
+	my ($idSession, $sArgs) = @_;
 	my $sOut = '';
 
 	$sOut  = "-- $aConfigs{SystemName} Sessions:\r\n";
 	$sOut .= "ID -TYPE- -USER------ I/O LVL -TARGET---- SRC -ADDRESS------ STATUS\r\n";
 	foreach my $thisSession (@aSessions){
 		$sOut .= sprintf("%2d %-6s %-11.11s %-3s  %d  %-11.11s %3.3s %-14.14s %-6.6s\r\n", 
-				$thisSession->{'id'}, 
-				$thisSession->{'type'}, 
-				$thisSession->{'user'}, 
-				$thisSession->{'direction'} ? 'Out' : 'In', 
-				$thisSession->{'auth'}, 
-				$thisSession->{'target'}, 
-				$thisSession->{'source'}, 
-				$thisSession->{'address'}, 
-				$thisSession->{'status'} ? 'Conn' : 'Disc');
+				$thisSession->{id}, 
+				$thisSession->{type}, 
+				$thisSession->{user}, 
+				$thisSession->{direction} ? 'Out' : 'In', 
+				$thisSession->{auth}, 
+				$thisSession->{target}, 
+				$thisSession->{source}, 
+				$thisSession->{address}, 
+				$thisSession->{status} ? 'Conn' : 'Disc');
 	}
 
 	return $sOut;
@@ -4659,16 +4988,15 @@ sub do_banner {
 		$aSessions[$idSession]->{VARS}->{'banner_text'} = '';
 		
 		command_done($idSession);
-        return $sBanner;
-    }
-    
-    command_done($idSession);
-    return '';
+		return $sBanner;
+	}
+	
+	command_done($idSession);
+	return '';
 }
 
 sub do_host_command {
 	my ($idSession, $sArgs) = @_;
-    
 	my $sCmd = 'HOSTCMD';
 	
 	# Get the COMMAND
@@ -4685,18 +5013,18 @@ sub do_host_command {
 
 
 sub do_qbf {
-    my ($idSession, $sArgs) = @_;
+	my ($idSession, $sArgs) = @_;
 	my $sCmd = 'QBF';
 	
 	command_start($idSession, $sCmd, 'QBF TEST');
 
 	command_done($idSession);
-    return $qbf_string;
+	return $qbf_string;
 }
 
 
 sub generate_test{
-    my ($idSession, $sCmd, $sTitle, $sString, $nLines) = @_;
+	my ($idSession, $sCmd, $sTitle, $sString, $nLines) = @_;
 
 	if (length($sString) < 1){
 		return '';
@@ -4724,32 +5052,32 @@ sub generate_test{
 
 
 sub do_ryry {
-    my ($idSession, $sArgs) = @_;
-    my @aArgs = split(/\s+/, $sArgs);
-    
-    return generate_test($idSession, 'RYRY', 'RYRY TEST', 'RY', $aArgs[0]);
+	my ($idSession, $sArgs) = @_;
+	my @aArgs = split(/\s+/, $sArgs);
+	
+	return generate_test($idSession, 'RYRY', 'RYRY TEST', 'RY', $aArgs[0]);
 }
 
 sub do_r6r6 {
-    my ($idSession, $sArgs) = @_;
-    my @aArgs = split(/\s+/, $sArgs);
-    
-    return generate_test($idSession, 'R6R6', 'R6R6 TEST', 'R6', $aArgs[0]);
+	my ($idSession, $sArgs) = @_;
+	my @aArgs = split(/\s+/, $sArgs);
+	
+	return generate_test($idSession, 'R6R6', 'R6R6 TEST', 'R6', $aArgs[0]);
 }
 
 sub do_rrrr {
-    my ($idSession, $sArgs) = @_;
-    my @aArgs = split(/\s+/, $sArgs);
-    
-    return generate_test($idSession, 'RRRR', 'RRRR TEST', 'R', $aArgs[0]);
+	my ($idSession, $sArgs) = @_;
+	my @aArgs = split(/\s+/, $sArgs);
+	
+	return generate_test($idSession, 'RRRR', 'RRRR TEST', 'R', $aArgs[0]);
 }
 
 sub do_raw_5bit {
-    my ($idSession, $sArgs) = @_;
-    
+	my ($idSession, $sArgs) = @_;
+	
 	my $sCmd = 'RAW5BIT';
-    command_start($idSession, $sCmd, 'RAW TEST 5 BITS');
-    
+	command_start($idSession, $sCmd, 'RAW TEST 5 BITS');
+	
 	my $sOut = '';
 
 	#$sOut .= "+------------- LTRS ------------- ------------- FIGS -------------+\n";
@@ -4765,7 +5093,7 @@ sub do_raw_5bit {
 	$sOut .= " ";
 	for (my $i = 0; $i < 32; $i++){
 		$sOut .= chr($i);
-	}	
+	}
 	$sOut .= '$RAWMODEOFF ';
 	$sOut .= "\n";
 	#$sOut .= "+-------------------------------- --------------------------------+\n";
@@ -4774,13 +5102,13 @@ sub do_raw_5bit {
 
 	return $sOut;
 }
-    
+
 sub do_raw_6bit {
-    my ($idSession, $sArgs) = @_;
-    
+	my ($idSession, $sArgs) = @_;
+	
 	my $sCmd = 'RAW6BIT';
-    command_start($idSession, $sCmd, 'RAW TEST 6 BITS');
-    
+	command_start($idSession, $sCmd, 'RAW TEST 6 BITS');
+	
 	my $sOut = '';
 
 	$sOut .= "+------------- LTRS -------------------------- LTRS -------------+\n";
@@ -4802,7 +5130,7 @@ sub do_raw_6bit {
 	$sOut .= "\n";
 	for (my $i = 0; $i < 64; $i++){
 		$sOut .= chr($i);
-	}	
+	}
 	$sOut .= "\n";
 	$sOut .= "+-------------------------------- --------------------------------+\n";
 
@@ -4824,10 +5152,10 @@ sub raw_test {
 		}
 		$sOut .= $cr.$lf;
 	}
-    
-    $sOut .= "\n------- FIGS ----------\n";
-
-    for (my $i = 0; $i <= $max; $i++) {
+	
+	$sOut .= "\n------- FIGS ----------\n";
+	
+	for (my $i = 0; $i <= $max; $i++) {
 		$sOut .= "----- $i -----\n".$figs;
 		for (my $j = 0; $j < 7; $j++) {
 			$sOut .= chr($i).chr(4);
@@ -4840,17 +5168,17 @@ sub raw_test {
 
 
 sub do_email_send{
-    my ($idSession, $sArgs) = @_;
-    my $sCmd = 'EMAIL';
-    
+	my ($idSession, $sArgs) = @_;
+	my $sCmd = 'EMAIL';
+	
 	my @aArgs = split(/\s+/, $sArgs);
 
 	my $sServer  = $aConfigs{EmailSMTP};
 	my $sAccount = $aConfigs{EmailAccount};
 	my $sPass    = $aConfigs{EmailPassword};
 	my $sFrom    = $aConfigs{EmailFrom};
-		
-    command_start($idSession, $sCmd, 'SEND EMAIL');
+	
+	command_start($idSession, $sCmd, 'SEND EMAIL');
 	
 	if ($sServer eq '' || $sAccount eq '' || $sPass eq '' || $sFrom eq ''){
 		return "Missing SMTP configuration. See README about heavymetal.cfg";
@@ -4934,12 +5262,12 @@ sub do_email_send{
 # fetching?
 # !!! This commands should be made asynch so host can continue operations while retrieving msgs
 sub do_email_fetch {
-    my ($idSession, $sArgs) = @_;
-    
-    my $sCmd = 'CHECKMAIL';
-    
-    command_start($idSession, $sCmd, 'CHECK EMAIL');
-    
+	my ($idSession, $sArgs) = @_;
+	
+	my $sCmd = 'CHECKMAIL';
+	
+	command_start($idSession, $sCmd, 'CHECK EMAIL');
+	
 	my @aArgs = split(/\s+/, $sArgs);
 
 	my $sAction = (exists $aArgs[0] && $aArgs[0] ne '') ? uc($aArgs[0]) : 'HEADERS';
@@ -5022,7 +5350,7 @@ sub do_email_fetch {
 		$sOut = "-- Messages in mailbox: $nMessages\n";
 
 		$sMainStatus = $sOut;
-		$oTkStatus->configure(-text=> $sMainStatus);
+		display_status($sMainStatus);
 		
 		my $nCount = 0;
 		
@@ -5043,8 +5371,8 @@ sub do_email_fetch {
 		foreach $idMsg (@aList) {
 			$nCount++;
 			$sMainStatus = "Fetching message $nCount of $nMessages";
-			$oTkStatus->configure( -text=> $sMainStatus);
-			$oTkMainWindow->update();
+			
+			display_status($sMainStatus);
 			
 #			if ($current_action eq "CANCEL") {
 #				$current_action = "";
@@ -5117,11 +5445,11 @@ sub do_email_fetch {
 
 	$sOut .= "\n-- DONE --";
 	
-    $aSessions[$idSession]->{VARS}->{'email_action'} = '';
-    $aSessions[$idSession]->{VARS}->{'ready'} = '';
-    
-    redraw_status_window();
-    
+	$aSessions[$idSession]->{VARS}->{'email_action'} = '';
+	$aSessions[$idSession]->{VARS}->{'ready'} = '';
+	
+	redraw_status_window();
+	
 	command_done($idSession);
 	
 	return ($sOut, 0, 0);
@@ -5129,12 +5457,12 @@ sub do_email_fetch {
 
 
 sub do_quote_portfolio {
-    my ($idSession, $sArgs) = @_;
-    
-    my $sCmd = 'QUOTE';
-    
-    command_start($idSession, $sCmd, 'STOCK PORTFOLIO');
-    
+	my ($idSession, $sArgs) = @_;
+	
+	my $sCmd = 'QUOTE';
+	
+	command_start($idSession, $sCmd, 'STOCK PORTFOLIO');
+	
 	return do_quote($idSession, $aConfigs{StockPortfolio});
 }
 
@@ -5151,8 +5479,8 @@ sub do_quote {
 		$aSessions[$idSession]->{command_calls}++;
 	}
 	else{
-    	command_start($idSession, $sCmd, 'STOCK QUOTES');
-    }
+		command_start($idSession, $sCmd, 'STOCK QUOTES');
+	}
 
 	# Get Symbols
 	my $sSymbols  = command_input($idSession, 'quote_symbols', 'LINE', $sArgs, '', "Symbols\a: ", $sCmd);
@@ -5190,15 +5518,15 @@ sub do_quote {
 }
 
 sub do_quote_full {
-    my ($idSession, $sArgs) = @_;
-    
+	my ($idSession, $sArgs) = @_;
+	
 	if (!$Modules{'Finance::YahooQuote'}->{loaded}){
 		return '-- ERROR: Finance::YahooQuote perl module not loaded';
 	}
 
-    my $sCmd = 'FULLQUOTE';
-    
-    command_start($idSession, $sCmd, 'FULL STOCK QUOTES');
+	my $sCmd = 'FULLQUOTE';
+	
+	command_start($idSession, $sCmd, 'FULL STOCK QUOTES');
 
 	# Get Symbols
 	my $sSymbols  = command_input($idSession, 'quote_symbols', 'LINE', $sArgs, '', "Symbols\a: ", $sCmd);
@@ -5243,10 +5571,11 @@ sub do_quote_full {
 
 # Very simple helper function in_array()
 sub in_array {
-     my ($arr,$search_for) = @_;
-     my %items = map {$_ => 1} @$arr; # create a hash out of the array values
-     return (exists($items{$search_for}))?1:0;
- }
+	my ($arr,$search_for) = @_;
+	my %items = map {$_ => 1} @$arr; # create a hash out of the array values
+	return (exists($items{$search_for}))?1:0;
+}
+
 
 #------------------------------------------------------------------------
 # X10 code snagged from Bill Birthisel's Misterhouse
@@ -5254,12 +5583,12 @@ sub in_array {
 #------------------------------------------------------------------------
 
 sub send_cm17 {
-    return unless ( 2 == @_ );
-    return ControlX10::CM17::send (@_);
+	return unless ( 2 == @_ );
+	return ControlX10::CM17::send (@_);
 }
 sub send_cm17_ir {
-    return unless ( 2 == @_ );
-    return ControlX10::CM17::send_ir (@_);
+	return unless ( 2 == @_ );
+	return ControlX10::CM17::send_ir (@_);
 }
 
 sub x10_send {
@@ -5387,62 +5716,37 @@ sub send_bits {
 # - - - - - - - - - - - - - - TELNET SUBS - - - - - - - - - - - - - - - -
 #------------------------------------------------------------------------
 
-sub telnet_negotiate{
-	my ($rSocket, $sOptions) = @_;
-	print "\nTELNET NEGOTIATE: $sOptions\n";
-	return undef;
-}
-
 sub telnet_init{
 	
-	if ($aConfigs{TelnetNegotiate} && !$Modules{'IO::Socket::Telnet'}->{loaded}){
-		$aConfigs{TelnetNegotiate} = 0;
-	}
-		
-	if ($aConfigs{TelnetNegotiate}){
-		$sckTelnetListener = IO::Socket::Telnet->new(
-			LocalAddr => '0.0.0.0', 
-			LocalPort => int($aConfigs{TelnetPort}),
-			Listen => 10, 
-			Reuse=>1
-		);
-	}
-	else{
-		$sckTelnetListener = IO::Socket::INET->new(
-			LocalAddr => '0.0.0.0', 
-			LocalPort => int($aConfigs{TelnetPort}),
-			Listen => 10, 
-			Reuse=>1
-		);
-	}
+	$sckTelnetListener = IO::Socket::INET->new(
+		LocalAddr => '0.0.0.0', 
+		LocalPort => int($aConfigs{TelnetPort}),
+		Listen => 10, 
+		Reuse=>1
+	);
 	
 	if (!defined($sckTelnetListener) || !$sckTelnetListener){
 		if ($aConfigs{Debug}){ logDebug("ERROR: Could not initiate listener socket: $@\n"); }
 		$aConfigs{TelnetEnabled} = 0;
-    	return 0;
-    }
+		return 0;
+	}
  
 	# Do I need to do this?
 	$sckTelnetListener->autoflush(1);
 	
 	# IO Select Sets for main thread
-	if (!defined $oTelnetReadSet){
-		$oTelnetReadSet      = new IO::Select();
-	}
-	if (!defined $oTelnetWriteSet){
-		$oTelnetWriteSet     = new IO::Select();
-	}
-	if (!defined $oTelnetExceptionSet){
-		$oTelnetExceptionSet = new IO::Select();
-	}
+	if (!defined $oTelnetReadSet)      { $oTelnetReadSet      = new IO::Select(); }
+	if (!defined $oTelnetWriteSet)     { $oTelnetWriteSet     = new IO::Select(); }
+	if (!defined $oTelnetExceptionSet) { $oTelnetExceptionSet = new IO::Select(); }
 
-    $oTelnetReadSet->add($sckTelnetListener);
-    $oTelnetExceptionSet->add($sckTelnetListener);
-
+	$oTelnetReadSet->add($sckTelnetListener);
+	$oTelnetExceptionSet->add($sckTelnetListener);
+	$nTelnetSockets++;
+	
 	if ($aConfigs{Debug}){ logDebug("\nTelnet server listening at port $aConfigs{TelnetPort}");}
 
 
-    return 1;
+	return 1;
 }
 
 
@@ -5460,13 +5764,147 @@ sub telnet_toggle{
 	}
 	else{
 		if ($aConfigs{Debug} > 0){ logDebug("\nDisabled Telnet\n"); }
-		my $nCount = telnet_close('ALL', 'Telnet Disabled');
+		my $nCount = telnet_close('IN', 'Telnet Disabled');
 		$sOut = '-- Telnet Disabled: '.$nCount.' socket(s) disconnected';
 	}
 	
 	redraw_status_window();
 	return $sOut;
 }
+
+
+sub telnet_connect{
+	(my $sHost, my $nPort, my $xTarget) = @_;
+	
+	$nPort = int($nPort);
+	
+	my $sckClient = new IO::Socket::INET(
+		Proto    => 'tcp',
+		PeerHost => $sHost,
+		PeerPort => $nPort, 
+		Timeout  => 5
+	);
+
+	if (!$sckClient){
+		if (defined $xTarget){
+			message_send('SYS', $xTarget, "Could not connect to $sHost:$nPort");
+		}
+		if ($aConfigs{Debug}){ logDebug("\nCould not connect to $sHost $nPort\n");}
+		return '';
+	}
+
+	$nSessionsCount++;
+	my $idSession  = $NewSessionId++;
+
+	if (defined $xTarget){
+		message_send($idSession, $xTarget, "Connected exclusively to session $idSession to $sHost:$nPort\r\n");
+	}
+	
+	my $xSource = defined($xTarget) && $xTarget =~ /^\d+$/ ? $xTarget : 'ALL';
+	$xTarget = defined($xTarget) ? $xTarget : 'IN';
+
+	my $sRemoteIP   = $sckClient->peerhost();
+	my $nRemotePort = $sckClient->peerport();
+	my $sLocalIP    = $sckClient->sockhost();
+	my $nLocalPort  = $sckClient->sockport();
+	
+	# IO Select Sets for main thread (if Telnet listener is disabled, then we might need to initiate these)
+	if (!defined $oTelnetReadSet)      { $oTelnetReadSet      = new IO::Select(); }
+	if (!defined $oTelnetWriteSet)     { $oTelnetWriteSet     = new IO::Select(); }
+	if (!defined $oTelnetExceptionSet) { $oTelnetExceptionSet = new IO::Select(); }
+	
+	$oTelnetReadSet->add($sckClient);
+	$oTelnetWriteSet->add($sckClient);
+	$oTelnetExceptionSet->add($sckClient);
+	
+	$aSessions[$idSession] = {
+		'id'          => $idSession,
+		'type'        => 'TELNET', 
+		'IN'          => '', 
+		'OUT'         => '',
+		'SOCKET'      => $sckClient,
+		'status'      => 1, 
+		'direction'   => 1, 
+		'auth'        => 0, 
+		'user'        => '', 
+		'target'      => $xTarget, 
+		'source'      => $xSource,
+		'remote_ip'   => $sRemoteIP,
+		'remote_port' => $nRemotePort,
+		'negotiate'   => $aConfigs{TelnetNegotiate},
+		'prompt'      => 0,
+		'disconnect'  => 0,
+		'address'     => $sRemoteIP,
+		'command_last'=> '',
+		'input_type'  => '', 
+		'input_var'   => '', 
+		'input_prompt'=> '',
+		'echo_input'  => 1,
+		'echo_msg'    => 0, 
+		'clean_line'  => 0,
+		'command'     => '',
+		'label_source'=> 0,
+	};
+
+	$aTelnetSockets{"$sckClient"} = $idSession;
+	$nTelnetSockets++;
+	
+	if (exists $aSessions[$xTarget]){
+		$aSessions[$xTarget]->{target} = $idSession;
+	}
+	if ($aConfigs{Debug}){ logDebug("\nNew server ($idSession) $sRemoteIP\n");}
+	
+	redraw_status_window();
+	
+	return $idSession;
+}
+
+
+sub telnet_close{
+	(my $sckSocket, my $sReason) = @_;
+	
+	# We kill all inbound connections and the main listener. We do not touch outbound connections.
+	if ($sckSocket eq 'IN'){
+		my $nCount = 1;
+		
+		if ($sckTelnetListener){
+			telnet_close($sckTelnetListener, $sReason);
+		}
+		
+		foreach my $thisSession (@aSessions){
+			if ($thisSession->{type} eq 'TELNET' && $thisSession->{status} && $thisSession->{direction} == 0){
+				telnet_close($thisSession->{SOCKET}, $sReason);
+				$nCount++;
+			}
+		}
+		return $nCount;
+	}
+	
+	# Remove from selects
+	$oTelnetReadSet->remove($sckSocket);
+	$oTelnetWriteSet->remove($sckSocket);
+	$oTelnetExceptionSet->remove($sckSocket);
+	$nTelnetSockets--;
+	
+	# Close the socket
+	$sckSocket->close();
+	
+	$nSessionsCount--;
+	
+	my $idSession = defined($aTelnetSockets{"$sckSocket"}) ? $aTelnetSockets{"$sckSocket"} : 0;
+	my $sIP       = 'unknown';
+	
+	if ($idSession){
+		$aSessions[$idSession]->{'status'} = 0;
+		$sIP = $aSessions[$idSession]->{'remote_ip'};
+	}
+	
+	if ($aConfigs{Debug}){ logDebug("\nTelnet connection $idSession from $sIP closed: $sReason\n");}
+
+	return 1;
+}
+
+
 
 sub telnet_io{
 	
@@ -5497,12 +5935,7 @@ sub telnet_io{
 					my $idSession  = $NewSessionId++;
 					
 					my $sckClient  = $sckRead->accept();
-					
-					if ($aConfigs{TelnetNegotiate}){
-						$sckClient->telnet_simple_callback(\&telnet_negotiate);
-						$sckClient->do(chr(1));
-					}
-					
+								
 					my $remoteip   = $sckClient->peerhost();
 					my $remoteport = $sckClient->peerport();
 					my $localip    = $sckClient->sockhost();
@@ -5527,6 +5960,8 @@ sub telnet_io{
 						'user'        => '', 
 						'remote_ip'   => $remoteip,
 						'remote_port' => $remoteport,
+						'xlate_cr'    => 1,
+						'negotiate'   => $aConfigs{TelnetNegotiate},
 						'prompt'      => 1,
 						'disconnect'  => 0,
 						'address'     => $remoteip,
@@ -5543,8 +5978,14 @@ sub telnet_io{
 					};
 					
 					$aTelnetSockets{"$sckClient"} = $idSession;
+					$nTelnetSockets++;
 						
-					$aSessions[$idSession]->{OUT} = "\r\n$aConfigs{TelnetWelcome}\n$aConfigs{SystemPrompt}";
+					if ($aSessions[$idSession]->{negotiate}){
+						# IAC WILL ECHO
+						$aSessions[$idSession]->{OUT} = chr(255).chr(251).chr(1);
+					}
+
+					$aSessions[$idSession]->{OUT} .= "\r\n$aConfigs{TelnetWelcome}\n$aConfigs{SystemPrompt}";
 					
 					
 					if ($aConfigs{Debug}){ logDebug("\nNew client ($idSession) from $remoteip\n");}
@@ -5569,35 +6010,52 @@ sub telnet_io{
 				
 				# We have incomming data
 				if(defined($nBytes) && $nBytes > 0){
-				#if(defined($nBytes)){
 					
 					# Fix issue with backspace not deleting character
 					$sChunk =~ s/$bs/$bs $bs/g;
 					
+					if ($aSessions[$idSession]->{negotiate}){
+						# Clear telnet simple negotiations (they start with IAC)
+						$sChunk =~ s/\xFF[^\xFF].//g;
+						$sChunk =~ s/\xFF\xFF/\xFF/g;
+					}
+					
 					$aSessions[$idSession]->{IN} .= $sChunk;
 					
 					my $nPosChunk;
+					my $sChrChunk = "\n";
 								
 					# INBOUND
 					if ($aSessions[$idSession]->{'direction'} == 0){
 						
 						
-						my $nPos = index($aSessions[$idSession]->{IN}, "\n");
+						my $nPos  = index($aSessions[$idSession]->{IN}, "\n");
+						
+						if ($aSessions[$idSession]->{xlate_cr} && $nPos >= 0){
+							$aSessions[$idSession]->{xlate_cr} = 0;
+						}
+						
+						if ($aSessions[$idSession]->{xlate_cr}){
+							my $nPos2 = index($aSessions[$idSession]->{IN}, "\r");
+							if ($nPos2 >= 0){
+								$nPos = $nPos2;
+								$sChrChunk = "\r";
+							}
+						}
+											
 						if ($nPos >= 0){
-
-							
 														
 							# Echo the first part of the chunk up to the \n including it
 							my $nLinesCount = 0;
 							if ($aSessions[$idSession]->{echo_input}){
-								$aSessions[$idSession]->{OUT} .= substr($sChunk, 0, index($sChunk, "\n") + 1, '');	
+								$aSessions[$idSession]->{OUT} .= substr($sChunk, 0, index($sChunk, $sChrChunk) + 1, '');	
 							}
 
 							while($nPos >= 0){
 								
 								if ($nLinesCount > 0){
 									if ($aSessions[$idSession]->{echo_input}){
-										$aSessions[$idSession]->{OUT} .= substr($sChunk, 0, index($sChunk, "\n") + 1, '');	
+										$aSessions[$idSession]->{OUT} .= substr($sChunk, 0, index($sChunk, $sChrChunk) + 1, '');	
 									}
 								}
 
@@ -5621,7 +6079,7 @@ sub telnet_io{
 								}
 								
 								# AUTHENTICATED SESSION
-								if ($aSessions[$idSession]->{'auth'}){
+								if ($aSessions[$idSession]->{auth}){
 									# Detect and execute commands or send message
 									process_line($idSession, $sLine);
 									
@@ -5634,10 +6092,16 @@ sub telnet_io{
 								else{
 									# Catchall for unauthenticated sessions
 									my $sResult = "-- Unauthenticated user";
+									my $bShowPrompt = 1;
 									if (substr($sLine, 0, 1) eq '\\' || substr($sLine, 0, 1) eq $aConfigs{EscapeChar}){
 										# PING		
-										if( $sLine =~ /^.ping$/i ){
+										if( $sLine =~ /^.ping\s*$/i ){
 											$sResult = 'PONG!';
+										}
+										elsif( $sLine =~ /^.(exit|quit|logout)\s*$/i ){
+											do_logout($idSession);
+											$sResult = "";
+											$bShowPrompt = 0;
 										}
 										# LOGIN
 										elsif( $sLine =~ /^.login(\s+(\S.*))?$/i ){
@@ -5647,14 +6111,13 @@ sub telnet_io{
 									elsif ($sLine eq ''){
 										$sResult = '';
 									}
-	
-									
-									$aSessions[$idSession]->{OUT} .= $sResult."\r\n$aConfigs{SystemPrompt}";
+										
+									$aSessions[$idSession]->{OUT} .= $sResult."\r\n" . ($bShowPrompt ? $aConfigs{SystemPrompt} : '');
 	
 								}
 								
 								$nLinesCount++;
-								$nPos = index($aSessions[$idSession]->{IN}, "\n");
+								$nPos = index($aSessions[$idSession]->{IN}, $sChrChunk);
 							}
 							
 							# Echo the remaining input
@@ -5690,7 +6153,7 @@ sub telnet_io{
 				}
 				# Either the client or the server has closed the socket remove the socket and close it
 				else{
-					telnet_close($sckRead, "Connection Closed");
+					telnet_close($sckRead, "Connection Closed (R)");
 				}
 				
 				
@@ -5737,9 +6200,13 @@ sub telnet_io{
 							$aSessions[$idSession]->{column}++;
 						}
 					}
-					
-					$sckWrite->send($sBuffer);
-					
+	
+					eval {
+						$sckWrite->send($sBuffer);
+					};
+					if($@){
+						telnet_close($sckWrite, "Connection Closed (W)");
+					}
 				}
 			}
 		}
@@ -5747,132 +6214,6 @@ sub telnet_io{
 
 	return 1;
 }
-
-
-
-sub telnet_connect{
-	(my $sHost, my $nPort, my $xTarget) = @_;
-	
-	$nPort = int($nPort);
-	
-	my $sckClient = new IO::Socket::INET(
-		Proto    => 'tcp',
-		PeerHost => $sHost,
-		PeerPort => $nPort, 
-		Timeout  => 10
-	);
-
-	if (!$sckClient){
-		if (defined $xTarget){
-			message_send('SYS', $xTarget, "Could not connect to $sHost:$nPort");
-		}
-		if ($aConfigs{Debug}){ logDebug("\nCould not connect to $sHost $nPort\n");}
-		return '';
-	}
-
-	$nSessionsCount++;
-	my $idSession  = $NewSessionId++;
-
-	if (defined $xTarget){
-		message_send($idSession, $xTarget, "Connected exclusively to session $idSession to $sHost:$nPort\r\n");
-	}
-	
-	my $xSource = defined($xTarget) && $xTarget =~ /^\d+$/ ? $xTarget : 'ALL';
-	$xTarget = defined($xTarget) ? $xTarget : 'IN';
-
-	my $sRemoteIP   = $sckClient->peerhost();
-	my $nRemotePort = $sckClient->peerport();
-	my $sLocalIP    = $sckClient->sockhost();
-	my $nLocalPort  = $sckClient->sockport();
-					
-	$oTelnetReadSet->add($sckClient);
-	$oTelnetWriteSet->add($sckClient);
-	$oTelnetExceptionSet->add($sckClient);
-	
-	$aSessions[$idSession] = {
-		'id'          => $idSession,
-		'type'        => 'TELNET', 
-		'IN'          => '', 
-		'OUT'         => '',
-		'SOCKET'      => $sckClient,
-		'status'      => 1, 
-		'direction'   => 1, 
-		'auth'        => 0, 
-		'user'        => '', 
-		'target'      => $xTarget, 
-		'source'      => $xSource,
-		'remote_ip'   => $sRemoteIP,
-		'remote_port' => $nRemotePort,
-		'prompt'      => 0,
-		'disconnect'  => 0,
-		'address'     => $sRemoteIP,
-		'command_last'=> '',
-		'input_type'  => '', 
-		'input_var'   => '', 
-		'input_prompt'=> '',
-		'echo_input'  => 1,
-		'echo_msg'    => 0, 
-		'clean_line'  => 0,
-		'command'     => '',
-		'label_source'=> 0,
-	};
-
-	$aTelnetSockets{"$sckClient"} = $idSession;
-	
-	if (exists $aSessions[$xTarget]){
-		$aSessions[$xTarget]->{target} = $idSession;
-	}
-	if ($aConfigs{Debug}){ logDebug("\nNew server ($idSession) $sRemoteIP\n");}
-	
-	redraw_status_window();
-	
-	return $idSession;
-}
-
-
-sub telnet_close{
-	(my $sckSocket, my $sReason) = @_;
-	
-	# We kill all inbound connections and the main listener. We do not touch outbound connections.
-	if ($sckSocket eq 'ALL'){
-		my $nCount = 1;
-		
-		if ($sckTelnetListener){
-			telnet_close($sckTelnetListener, $sReason);
-		}
-		
-		foreach my $thisSession (@aSessions){
-			if ($thisSession->{type} eq 'TELNET' && $thisSession->{status} && $thisSession->{direction} == 0){
-				telnet_close($thisSession->{SOCKET}, $sReason);
-				$nCount++;
-			}
-		}
-		return $nCount;
-	}
-	
-	# Remove from selects
-	$oTelnetReadSet->remove($sckSocket);
-	$oTelnetWriteSet->remove($sckSocket);
-	$oTelnetExceptionSet->remove($sckSocket);
-
-	# Close the socket
-	$sckSocket->close();
-	
-	$nSessionsCount--;
-	
-	my $idSession = defined($aTelnetSockets{"$sckSocket"}) ? $aTelnetSockets{"$sckSocket"} : 0;
-	my $sIP       = 'unknown';
-	
-	if ($idSession){
-		$aSessions[$idSession]->{'status'} = 0;
-		$sIP = $aSessions[$idSession]->{'remote_ip'};
-	}
-	
-	if ($aConfigs{Debug}){ logDebug("\nTelnet connection $idSession from $sIP closed: $sReason\n");}
-
-	return 1;
-}
-
 
 
 #------------------------------------------------------------------------
@@ -6089,12 +6430,12 @@ sub message_send{
 	
 	my $nCount = 0;
 	foreach my $thisSession (@aSessions){
-		if ($thisSession->{'status'} && $thisSession->{'auth'} > 0){
+		if ($thisSession->{'status'} && $thisSession->{auth} > 0){
 			if ($nSendType == 1 
-				|| ($nSendType == 2 && $thisSession->{'type'} eq $xTarget) 
-				|| ($nSendType == 3 && $thisSession->{'user'} eq $xTarget) 
-				|| ($nSendType == 4 && $thisSession->{'direction'} == 1) 
-				|| ($nSendType == 5 && $thisSession->{'direction'} == 0))
+				|| ($nSendType == 2 && $thisSession->{type} eq $xTarget) 
+				|| ($nSendType == 3 && $thisSession->{user} eq $xTarget) 
+				|| ($nSendType == 4 && $thisSession->{direction} == 1) 
+				|| ($nSendType == 5 && $thisSession->{direction} == 0))
 			{
 				
 				if ($idSource != $thisSession->{'id'} || $thisSession->{echo_msg}){
@@ -6472,7 +6813,7 @@ sub msn_toggle{
 		if ($aConfigs{MsnUsername} ne ''){
 			if ($aConfigs{Debug}){ logDebug("\nEnabled MSN: $aConfigs{MsnUsername}\n"); }
 			
-			$oTkStatus->configure(-text => 'Connecting to MSN...\nThis may freeze the window for a few seconds!', -justify => 'center');
+			display_status('Connecting to MSN...\nThis may freeze the window for a few seconds!');
 			redraw_status_window();
 			
 			if (defined $oMSN){
@@ -6744,10 +7085,10 @@ sub debug_char{
 		}
 		else{
 			if ($rcv_shift eq $ltrs) {
-				return $CODES{$aConfigs{LoopCode}}->{'FROM-LTRS'}->{$c}
+				return $CODES{$aConfigs{SerialCode}}->{'FROM-LTRS'}->{$c}
 			}
 			else {
-				return $CODES{$aConfigs{LoopCode}}->{'FROM-FIGS'}->{$c}
+				return $CODES{$aConfigs{SerialCode}}->{'FROM-FIGS'}->{$c}
 			}
 		}
 	}
@@ -6927,11 +7268,11 @@ sub transcode_to_loop{
 		$c = substr($sLine, $n, 1);
 
 		# PROCESS ASCII LOOP
-		if ($aConfigs{LoopCode} eq "ASCII" ) {
-			if ($c eq $lf && $xlate_lf){
+		if ($aConfigs{SerialCode} eq "ASCII" ) {
+			if ($c eq $lf && $aConfigs{TtyTranslateLF}){
 				$d = $ascii_end_of_line;
 			}
-			elsif ($c eq $cr && $xlate_cr) {
+			elsif ($c eq $cr && $aConfigs{TtyTranslateCR}) {
 				$d = $ascii_end_of_line;
 			}
 			else {
@@ -6941,7 +7282,7 @@ sub transcode_to_loop{
 		# PROCESS OTHER ENCODINGS
 		else {
 
-			if ($CODES{$aConfigs{LoopCode}}->{upshift}){
+			if ($CODES{$aConfigs{SerialCode}}->{upshift}){
 				$c = uc($c);
 			}
 		
@@ -6949,19 +7290,19 @@ sub transcode_to_loop{
 				$d = $end_of_line;
 				$sStatusShift = $ltrs;
 			}
-			elsif (exists($CODES{$aConfigs{LoopCode}}->{'TO-LTRS'}->{$c})){
+			elsif (exists($CODES{$aConfigs{SerialCode}}->{'TO-LTRS'}->{$c})){
 				if ($sStatusShift eq $figs) {
 					$sOut        .= $ltrs;
 					$sStatusShift = $ltrs;
 				}
-				$d = $CODES{$aConfigs{LoopCode}}->{'TO-LTRS'}->{$c}
+				$d = $CODES{$aConfigs{SerialCode}}->{'TO-LTRS'}->{$c}
 			}
-			elsif (exists($CODES{$aConfigs{LoopCode}}->{'TO-FIGS'}->{$c})){
+			elsif (exists($CODES{$aConfigs{SerialCode}}->{'TO-FIGS'}->{$c})){
 				if ($sStatusShift eq $ltrs) {
 					$sOut        .= $figs;
 					$sStatusShift = $figs;
 				}
-				$d = $CODES{$aConfigs{LoopCode}}->{'TO-FIGS'}->{$c}
+				$d = $CODES{$aConfigs{SerialCode}}->{'TO-FIGS'}->{$c}
 			}
 			else {
 				$d = undef;
