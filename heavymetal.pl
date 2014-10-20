@@ -162,7 +162,7 @@ $Configs{Debug}           = 0;
 $Configs{DebugFile}       = 'debug/debug-$DATETIME.log';
 $Configs{DebugShowErrors} = 0;
 $Configs{SerialSetserial} = 1;
-$Configs{SerialBufferSize}= 8;
+$Configs{SerialBufferSize}= 1;
 $Configs{SerialTimeOn}    = 3;
 $Configs{SerialTimeOff}   = 120;
 $Configs{UnitTemp}        = 'Celsius';
@@ -440,26 +440,28 @@ my %aPortAddresses = (
 $Configs{'TTY.1.Address'} = $aPORTS{ $Configs{'TTY.1.Port'} }->{address};
 $Configs{'TTY.2.Address'} = $aPORTS{ $Configs{'TTY.2.Port'} }->{address};
 
-#my $BAUD51  = 2235;	# 60 wpm gear for 6-bit codes w/ 1.5 stop bits
-#my $BAUD51  = 2111;	# 60 wpm gear for 6-bit codes w/ 2 stop bits
-#my $BAUD51  = 2180;	# 60 wpm gear for 6-bit codes w/ 2 stop bits (slowed)
-
+# Note: Divisors are only needed for low baud rates.
 my %aBaudRates = (
-	'BAUD45'    => {order => 1,  bauds => 45,    divisor => 2534, label => '45.5 Baud (60WPM)'              , label_short => '45.5 Bb'}, # 45.5 baud
-	'BAUD51'    => {order => 2,  bauds => 51,    divisor => 2190, label => '51 Baud (60WPM for 6-bit codes)', label_short => '60WPM'}, # 60 wpm gear for 6-bit codes w/ 1 stop bits (slowed)
-	'BAUD50'    => {order => 3,  bauds => 50,    divisor => 2304, label => '50 Baud (66WPM)'                , label_short => '50 Bb'}, # 50 baud
-	'BAUD56'    => {order => 4,  bauds => 56,    divisor => 2057, label => '56 Baud (75WPM)'                , label_short => '75WPM'}, # 75 wpm for 5-bit codes
-	'BAUD66'    => {order => 5,  bauds => 66,    divisor => 1697, label => '74 Baud (100WPM)'               , label_short => '100WPM'}, #
-	'WPM100'    => {order => 6,  bauds => 66,    divisor => 1555, label => '66 Baud'                        , label_short => '66 Bb'}, # 74 baud
-	'BAUD110'   => {order => 7,  bauds => 110,   divisor => 1047, label => '110 Baud'                       , label_short => '110 Bb'}, #
-	'BAUD300'   => {order => 8,  bauds => 300,   divisor =>    0, label => '300 Baud'                       , label_short => '300'}, #
-	'BAUD600'   => {order => 9,  bauds => 600,   divisor =>    0, label => '600 Baud (Custom USB)'          , label_short => '600'}, #
-	'BAUD1200'  => {order => 10, bauds => 1200,  divisor =>    0, label => '1200 Baud'                      , label_short => '1200'}, #
-	'BAUD2400'  => {order => 11, bauds => 2400,  divisor =>    0, label => '2400 Baud'                      , label_short => '2400'}, #
-	'BAUD4800'  => {order => 12, bauds => 4800,  divisor =>    0, label => '4800 Baud'                      , label_short => '4800'}, #
-	'BAUD9600'  => {order => 13, bauds => 9600,  divisor =>    0, label => '9600 Baud'                      , label_short => '9600'}, #
-	'BAUD19200' => {order => 14, bauds => 19200, divisor =>    0, label => '19200 Baud'                     , label_short => '19200'}, #
-	'BAUD38400' => {order => 15, bauds => 38400, divisor =>    0, label => '38400 Baud'                     , label_short => '38400'}, #
+	'BAUD45'    => {order =>  10, bauds => 45,    divisor => 2534, label => '45.5 Baud (60WPM)'              , label_short => '45.5 Bb'},
+	'BAUD51A'   => {order =>  20, bauds => 51,    divisor => 2235, label => '51 Baud (60WPM for 6-bit + 1.5 stop)',    label_short => '60WPM'},
+	'BAUD51B'   => {order =>  30, bauds => 51,    divisor => 2111, label => '51 Baud (60WPM for 6-bit + 2 stop)',      label_short => '60WPM'},
+	'BAUD51C'   => {order =>  40, bauds => 51,    divisor => 2180, label => '51 Baud (60WPM for 6-bit + 2 stop slow)', label_short => '60WPM'},
+	'BAUD50'    => {order =>  50, bauds => 50,    divisor => 2304, label => '50 Baud (66WPM)'                , label_short => '50 Bb'},
+	'BAUD56'    => {order =>  60, bauds => 56,    divisor => 2057, label => '56 Baud (75WPM)'                , label_short => '75WPM'},
+	'BAUD66'    => {order =>  70, bauds => 66,    divisor => 1697, label => '74 Baud (100WPM)'               , label_short => '100WPM'},
+	'WPM100'    => {order =>  80, bauds => 66,    divisor => 1555, label => '66 Baud'                        , label_short => '66 Bb'}, # 74 baud ?
+	'BAUD110'   => {order =>  90, bauds => 110,   divisor => 1047, label => '110 Baud'                       , label_short => '110 Bb'},
+	'BAUD150'   => {order => 100, bauds => 150,   divisor =>  768, label => '150 Baud'                       , label_short => '150 Bb'},
+	'BAUD200'   => {order => 110, bauds => 200,   divisor =>  576, label => '200 Baud'                       , label_short => '200 Bb'},
+	'BAUD300'   => {order => 120, bauds => 300,   divisor =>    0, label => '300 Baud'                       , label_short => '300'},
+	'BAUD600'   => {order => 130, bauds => 600,   divisor =>    0, label => '600 Baud (Custom USB)'          , label_short => '600'},
+	'BAUD1200'  => {order => 140, bauds => 1200,  divisor =>    0, label => '1200 Baud'                      , label_short => '1200'},
+	'BAUD2400'  => {order => 150, bauds => 2400,  divisor =>    0, label => '2400 Baud'                      , label_short => '2400'},
+	'BAUD4800'  => {order => 160, bauds => 4800,  divisor =>    0, label => '4800 Baud'                      , label_short => '4800'},
+	'BAUD9600'  => {order => 170, bauds => 9600,  divisor =>    0, label => '9600 Baud'                      , label_short => '9600'},
+	'BAUD19200' => {order => 180, bauds => 19200, divisor =>    0, label => '19200 Baud'                     , label_short => '19200'},
+	'BAUD38400' => {order => 190, bauds => 38400, divisor =>    0, label => '38400 Baud'                     , label_short => '38400'},
+	'DIVISOR'   => {order => 200, bauds => 38400, divisor =>    0, label => 'Custom Divisor'                 , label_short => 'Custom'},
 );
 
 my %aDataBits = (
