@@ -118,7 +118,7 @@ already packaged, you do not need to follow these instructions.
 
 ##Version History
 
-### HeavyMetal v3.0
+### HeavyMetal v3.0 (2010-06-25)
 * Session based with independent buffers
 * Support for Telnet clients and servers
 * Ability to pipe a telnet connection between two HMs so you can chat TTY-to-TTY over Internet
@@ -131,7 +131,7 @@ already packaged, you do not need to follow these instructions.
 * Fixed SMTP Auth
 * Fixed NOAA FTP url used for Weather forecasts
 
-### HeavyMetal v3.1.000
+### HeavyMetal v3.1.000 (2012-02-28)
 * Rewrote the GUI, now uses tabs and configs are available right at the GUI. You even have icons!
 * Support for ConsoleOnly mode. With it you can run HM as a daemon and access it via Telnet.
 * Support for multiple serial ports (max 2 for now, but easily expandable) with totally independent configurations.
@@ -144,10 +144,20 @@ already packaged, you do not need to follow these instructions.
 * Fix to the weather FTP from NOAA, now the cities are dynamically loaded instead of having a static list (which was outdated)
 * A plethora of bugfixes. Now it has been tested in Linux (Fedora using ActivePerl)
 
-### HeavyMetal v3.1.001
+### HeavyMetal v3.1.001 (2012-03-10)
 * New RSS tab to handle many many RSS feeds
 * Many Favorites added to menus
 * Main weather provider switched to WWO
 * Added special RSS feed for historic cables
 * Added WEATHER METAR support in various formats and with subcommand
 * Added a progress bar for measuring the buffer in a nice graphical way
+
+### HeavyMetal v3.1.002 (2012-03-25)
+* New built-in CRON for scheduled tasks
+* Twitter feeds support via RSS
+* METAR HISTORIC format, just like the weather teletypes from the 1940s
+* NOAA CLIMATE access added
+* NOAA menues are now cached
+* Double click on a feed in the RSS tab now shows a summary for that feed.
+* $WEB command for very basic HTML text-browsing
+* New built-in BANNER command, in replacement of the external command used in previous versions
