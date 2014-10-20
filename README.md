@@ -161,3 +161,11 @@ already packaged, you do not need to follow these instructions.
 * Double click on a feed in the RSS tab now shows a summary for that feed.
 * $WEB command for very basic HTML text-browsing
 * New built-in BANNER command, in replacement of the external command used in previous versions
+
+### HeavyMetal v3.1.003 (2012-04-08)
+* Bugfixes in several places, including fixing TTY2 session
+* DTR & RTS line control on the serial port (i.e. for John Nagle board)
+* $MOTOR command and auto turn on/off with safety delays included
+* Easy one click connect from menu to another user of HMNet user
+* Weather temperatures are now Celsius/Farenheit configurable
+* Option to send report for bugs using the Help menu, one single click

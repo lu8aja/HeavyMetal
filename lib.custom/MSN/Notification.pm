@@ -1065,7 +1065,7 @@ sub authenticate
 		'</Envelope>';
 
 	# Do a new POST request then
-print("PP3 Authing\n");
+# print("PP3 Authing\n");
 	my $req = HTTP::Request->new(POST => "https://loginnet.passport.com/RST.srf");
 	   $req->content($body);
 	my $checkerror = '<faultcode>wsse:FailedAuthentication</faultcode>';
@@ -1075,17 +1075,17 @@ print("PP3 Authing\n");
 	{	# Grab the content and then strip it down	
 		if(my ($ticket) = ($resp->content =~ m!<wsse:binarysecuritytoken.*?>(t=.*?&amp;p=.*?)</!i)) {
 			# We found a ticket, yayayya!
-print("Got Ticket\n");
+# print("Got Ticket\n");
 			return $self->html_decode($ticket);
 		} elsif ($resp->content =~ m/$checkerror/i) {
-			print "Authentication failed. Login details incorrect.\n";
+			print "MSN Authentication failed. Login details incorrect.\n";
 			return undef;
 		} else {
-			print "Authentication failed. An unknown error occurred.\n";
+			print "MSN Authentication failed. An unknown error occurred.\n";
 			return undef;
 		}
 	} else {
-		print "Authentication request failed, the authentication server appears to be down or is not responding. Check your firewall.\n";
+		print "MSN Authentication request failed, the authentication server appears to be down or is not responding. Check your firewall.\n";
 		print $resp->content;
 	}
 	
@@ -1099,8 +1099,8 @@ sub html_encode
 		$string =~ s/&/&amp;/g;
 		$string =~ s/</&lt;/g;
 		$string =~ s/>/&gt;/g;
-		$string =~ s/'/&apos;/g;
-		$string =~ s/"/&quot;/g;
+		$string =~ s/'/&apos;/g; #'
+		$string =~ s/"/&quot;/g; #"
 
 	return $string;	
 }
