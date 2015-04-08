@@ -29,7 +29,8 @@
 # v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 # v3.1.004 2013-03-25 New: Support for External codes & External Custom Commands. Remote Control.
 # v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
-# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY. Twitter deprecated its RSS API. MSN deprecated.
+# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY. 
+#                     DEPRECATED: Twitter (RSS API), MSN, Google Weather
 #
 # Special thanks to Jim Haynes for his help in making HM3 run in Linux.
 # Special thanks to Steve Garrison for his help in testing HM3 in Windows.
@@ -142,7 +143,7 @@ $Modules{'XML::DOM'}           = {order => $n++, loaded => 0, required => 0, os 
 $Modules{'XML::RSS::Parser'}   = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'HTML::Entities'}     = {order => $n++, loaded => 0, required => 0, os => '', args => "('decode_entities')"};
 $Modules{'HTML::TreeBuilder'}  = {order => $n++, loaded => 0, required => 0, os => ''};
-$Modules{'Weather::Google'}    = {order => $n++, loaded => 0, required => 0, os => ''};
+#$Modules{'Weather::Google'}    = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'Geo::METAR'}         = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'Google::Voice'}      = {order => $n++, loaded => 0, required => 0, os => ''};
 
@@ -642,7 +643,7 @@ my %aActionCommands = (
 	'URL'       => {command => \&do_url,             auth => 2, help => 'Get any FTP/HTTP URL',               args => 'url'},
 	'WEB'       => {command => \&do_web,             auth => 2, help => 'Browse HTML pages',                  args => 'url-or-link-id'},
 	'FTP'       => {command => \&do_ftp,             auth => 2, help => 'Get any FTP (PASV) URL',             args => 'url'},
-	'WEATHER'   => {command => \&do_weather,         auth => 2, help => 'Get Weather report',                 args => "Varies by source:\n   (WWO,GOOGLE) city state country\n-or-\n   NOAA 2-letter-state city\n-or-\n   METAR (STANDARD,READABLE,DETAILED,HISTORIC) (hours -optional-) stations\n-or-\n   METAR (COUNTRY,STATE,STATION,SEARCH) whatever-criteria"},
+	'WEATHER'   => {command => \&do_weather,         auth => 2, help => 'Get Weather report',                 args => "Varies by source:\n   (WWO) city state country\n-or-\n   NOAA 2-letter-state city\n-or-\n   METAR (STANDARD,READABLE,DETAILED,HISTORIC) (hours -optional-) stations\n-or-\n   METAR (COUNTRY,STATE,STATION,SEARCH) whatever-criteria"},
 	'NOAA'      => {command => \&do_weather_noaa,    auth => 2, help => 'Get NOAA weather report from NOAA',  args => '2-letter-state city'},
 	'METAR'     => {command => \&do_weather_metar,   auth => 2, help => 'Get METAR Weather report from ADDS', args => 'output stations'},
 	'ART'       => {command => \&do_art,             auth => 2, help => 'Get RTTY ART images',                args => 'path'},
@@ -2836,7 +2837,7 @@ sub initialize_tab_configs{
 	
 	my $oTkFrameConfigsMisc = $tkRight->new_ttk__labelframe(-text => "Misc Configs");
 	UI_setParent($oTkFrameConfigsMisc, 0, 1, [100, 220]);
-	UI_addControl('WeatherDefaultSource', 'combobox', 'Default Weather', {-values => ['WWO', 'GOOGLE', 'NOAA', 'METAR'], -state => 'readonly', -width => 8});
+	UI_addControl('WeatherDefaultSource', 'combobox', 'Default Weather', {-values => ['WWO', 'NOAA', 'METAR'], -state => 'readonly', -width => 8});
 	UI_newRow();
 	UI_addControl('UnitTemp', 'combobox', 'Temp Units', {-values => ['Celsius', 'Farenheit'], -state => 'readonly', -width => 10});
 	UI_newRow();
@@ -6028,7 +6029,7 @@ sub do_weather {
 		return do_news($idSession, "WEATHER $sSource");
 	}
 	else{
-		if ($sSource =~ /^NOAA|METAR|WWO|GOOGLE|METARLEGACY$/i){
+		if ($sSource =~ /^NOAA|METAR|WWO|METARLEGACY$/i){
 			$sArgs =~ s/^\S+\s+//;
 		}
 		else{
@@ -6047,9 +6048,9 @@ sub do_weather {
 		elsif ($sSource eq 'WWO'){
 			return do_weather_wwo($idSession, $sArgs);
 		}
-		elsif ($sSource eq 'GOOGLE'){
-			return do_weather_google($idSession, $sArgs);
-		}
+#		elsif ($sSource eq 'GOOGLE'){
+#			return do_weather_google($idSession, $sArgs);
+#		}
 		else{
 			$bError = 1;
 			$sOut = '-- ERROR: Unsupported source';
@@ -6109,41 +6110,41 @@ sub do_weather_wwo{
 
 
 
-sub do_weather_google{
-	my ($idSession, $sArgs) = @_;
-	
-	my $sCmd   = 'WEATHER';
-	my @aArgs  = split(/\s+/, $sArgs);
-	my $sOut   = '';
-	my $bError = 0;
-
-	if (!$Modules{'Weather::Google'}->{loaded}){
-		return "-- ERROR: perl module Weather-Google missing";
-	}
-	
-	my $oSvc = new Weather::Google;
-	$oSvc->city($sArgs);
-	my $rCurrent   = $oSvc->current();
-	my @aForecasts;
-	$aForecasts[0] = $oSvc->forecast(0);
-	$aForecasts[1] = $oSvc->forecast(1);
-	$aForecasts[2] = $oSvc->forecast(2);
-	$aForecasts[3] = $oSvc->forecast(3);
-
-	my $sUnits    = $oSvc->forecast_information('unit_system') eq 'US' ? 'F' : 'C';
-	my $sTemp     = $sUnits eq 'F' ? $rCurrent->{temp_f}.'F' : $rCurrent->{temp_c}.'C';
-	my $sHumidity = $rCurrent->{humidity};
-	my $sWind     = $rCurrent->{wind_condition};
-	
-	$sOut = sprintf("Current weather for %s\n Temp: %s\n %s\n %s\n %s\nForecasts:\n", $oSvc->info('city'), $sTemp, $sHumidity, $sWind, $rCurrent->{condition});
-	foreach my $rForecast (@aForecasts){
-		$sOut .= sprintf(" %s Low: %d%s High: %d%s - %s\n", $rForecast->{day_of_week}, $rForecast->{low}, $sUnits, $rForecast->{high},$sUnits, $rForecast->{condition});
-	}
-	$sOut .= "Source: GOOGLE\n";
-	$sOut .= "-- End of WEATHER REPORT --";
-	
-	return command_done($idSession, $sOut, '^weather_', 0, 0);
-}
+#sub do_weather_google{
+#	my ($idSession, $sArgs) = @_;
+#	
+#	my $sCmd   = 'WEATHER';
+#	my @aArgs  = split(/\s+/, $sArgs);
+#	my $sOut   = '';
+#	my $bError = 0;
+#
+#	if (!$Modules{'Weather::Google'}->{loaded}){
+#		return "-- ERROR: perl module Weather-Google missing";
+#	}
+#	
+#	my $oSvc = new Weather::Google;
+#	$oSvc->city($sArgs);
+#	my $rCurrent   = $oSvc->current();
+#	my @aForecasts;
+#	$aForecasts[0] = $oSvc->forecast(0);
+#	$aForecasts[1] = $oSvc->forecast(1);
+#	$aForecasts[2] = $oSvc->forecast(2);
+#	$aForecasts[3] = $oSvc->forecast(3);
+#
+#	my $sUnits    = $oSvc->forecast_information('unit_system') eq 'US' ? 'F' : 'C';
+#	my $sTemp     = $sUnits eq 'F' ? $rCurrent->{temp_f}.'F' : $rCurrent->{temp_c}.'C';
+#	my $sHumidity = $rCurrent->{humidity};
+#	my $sWind     = $rCurrent->{wind_condition};
+#	
+#	$sOut = sprintf("Current weather for %s\n Temp: %s\n %s\n %s\n %s\nForecasts:\n", $oSvc->info('city'), $sTemp, $sHumidity, $sWind, $rCurrent->{condition});
+#	foreach my $rForecast (@aForecasts){
+#		$sOut .= sprintf(" %s Low: %d%s High: %d%s - %s\n", $rForecast->{day_of_week}, $rForecast->{low}, $sUnits, $rForecast->{high},$sUnits, $rForecast->{condition});
+#	}
+#	$sOut .= "Source: GOOGLE\n";
+#	$sOut .= "-- End of WEATHER REPORT --";
+#	
+#	return command_done($idSession, $sOut, '^weather_', 0, 0);
+#}
 
 
 sub weather_wind{
