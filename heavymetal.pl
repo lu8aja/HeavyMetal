@@ -580,7 +580,7 @@ my %aEscapeCommands = (
     #'DEL'       => \&do_delete,		    # Discard input line
 );
 
-my %aActionCommands = (
+my %Commands = (
 	'HELP'      => {command => \&do_help,            auth => 2, help => 'Display usage message',        args => 'SETTINGS, COMMANDS, CHARS (optional) -or- command-name (optional)'},
 	'ABOUT'     => {command => \&do_about,           auth => 2, help => 'Display information about HM', args => 'No args'},
 	'PING'      => {command => \&do_ping,            auth => 1, help => 'Ping Pong communication test', args => 'echo-text (optional)'},
@@ -1056,7 +1056,7 @@ my @aWeatherStates = qw(AK AL AR AZ BC CA CO CT DE FL GA HI HN IA ID IL IN KS KY
 	}
 	
 	if ($bControlRemote){
-		# We reset the configs to empty
+		# In remote control we don't execute stuff locally, and we have no configs of our own, so everything is essentially empty
 		%Configs = ();
 		$Configs{EscapeChar} = '$';
 	}
@@ -1089,6 +1089,12 @@ my @aWeatherStates = qw(AK AL AR AZ BC CA CO CT DE FL GA HI HN IA ID IL IN KS KY
 		}
 		
 		load_codes();
+		
+		if (-e 'custom.pl'){
+			require 'custom.pl';
+			
+			load_custom_commands(\%Commands, \%Configs, \%Modules);
+		}
 	}
 
 	
@@ -1453,6 +1459,7 @@ sub session_set_eol {
 	}
 }
 
+# TODO, document the syntax of the codes.ini file
 sub load_codes {
 	my $sFile = 'codes.ini';
 	if (open(my $rFile, '<', $sFile)){
@@ -1598,12 +1605,14 @@ sub config_set {
 		}
 	}
 	
+	# Notify the REMOTE CONTROL CLIENT that the given config has changed
 	if ($Global{ControlClient}){
 		if (message_deliver('SYS', $Global{ControlClient}, '$EVENT CONFIG '.JSON->new->utf8->allow_unknown->encode({$sKey => $sVal}) , 0, 1, 1, 1) != 1){
 			$Global{ControlClient} = 0;
 		}
 	}
 	
+	# Certain configs have associated functions that must be executed after they are changed, for example updating port settings
 	if (!$bDoNotExecuteCmd && $Global{SystemInitialized}){
 		my $sKeyGeneric = $sKey;
 		$sKeyGeneric =~ s/^TTY\.(\d+)\./TTY.x./;
@@ -4893,7 +4902,7 @@ sub process_batch{
 		}
 		
 		if ($sCmd){
-			if (exists $aActionCommands{$sCmd} || exists($Configs{"CommandCustom.$sCmd"})){
+			if (exists $Commands{$sCmd} || exists($Configs{"CommandCustom.$sCmd"})){
 				push(@aCommands, $Configs{EscapeChar}.$sCmd.' '.$sArgs);
 			}
 			else{
@@ -7541,7 +7550,7 @@ sub do_control{
 			return '-- Error: Connection is not active';
 		}
 		
-		$rDebugSocket = $aSessions[$aArgs[1]]->{SOCKET};
+		$rDebugSocket = $thisSession->{SOCKET};
 		return '-- OK: Debug output will be copied to this telnet session';
 		
 	}
@@ -8645,11 +8654,11 @@ sub do_help {
 
     if (defined $aArgs[0] && $aArgs[0] !~ /^(SETTINGS|COMMANDS|CHARS)$/i){
     	$sKey = uc($aArgs[0]);
-    	if  (defined($aActionCommands{$sKey})){
+    	if  (defined($Commands{$sKey})){
     		$s .=  "-- Help for command $sKey:\n  ";
-	    	$s .=  defined($aActionCommands{$sKey}->{help}) ? $aActionCommands{$sKey}->{help} : "Sorry, no help available";
+	    	$s .=  defined($Commands{$sKey}->{help}) ? $Commands{$sKey}->{help} : "Sorry, no help available";
 	    	$s .=  "\n  Arguments:\n    ";
-	    	$s .=  defined($aActionCommands{$sKey}->{args}) ? $aActionCommands{$sKey}->{args} : "No args";
+	    	$s .=  defined($Commands{$sKey}->{args}) ? $Commands{$sKey}->{args} : "No args";
 	    	$s .=  "\n-- DONE --\n";
 	    }
 	    else{
@@ -8675,8 +8684,8 @@ sub do_help {
 		if (!defined $aArgs[0] || lc($aArgs[0]) eq 'commands'){
 		    $s .=  "-- Commands:\n";
 		    $s .=  "\n";
-		    foreach my $sKey (sort(keys(%aActionCommands))) { 
-		    	$s .= sprintf(" %-10s: %s\n", $sKey, $aActionCommands{$sKey}->{help});
+		    foreach my $sKey (sort(keys(%Commands))) { 
+		    	$s .= sprintf(" %-10s: %s\n", $sKey, $Commands{$sKey}->{help});
 		    }
 		    $s .=  "-------------------------------------------------------------\n";
 		    $s .=  "\n";
@@ -10546,7 +10555,7 @@ sub telnet_io{
 					my $nPosChunk;
 					my $sChrChunk = "\n";
 					
-					# CONTROL session
+					# CONTROL session: $REPLY and $EVENT
 					if ($idSession == $Global{ControlServer}){
 						my $nPos  = index($thisSession->{IN}, "\n");
 						while($nPos >= 0){
@@ -11188,7 +11197,7 @@ sub process_line{
 				my $bError     = 0;
 				
 				# Custom commands
-				if (!exists($aActionCommands{$sCmd}) && exists($Configs{"CommandCustom.$sCmd"})){
+				if (!exists($Commands{$sCmd}) && exists($Configs{"CommandCustom.$sCmd"})){
 					my $sNewCmdLine = $Configs{"CommandCustom.$sCmd"};
 					
 					if (substr($sNewCmdLine, 0, 1) eq $Configs{EscapeChar}){
@@ -11207,8 +11216,8 @@ sub process_line{
 				}
 				
 				# Action commands
-				if (exists $aActionCommands{$sCmd}){
-					if ($aActionCommands{$sCmd}->{auth} <= $thisSession->{auth}){
+				if (exists $Commands{$sCmd}){
+					if ($Commands{$sCmd}->{auth} <= $thisSession->{auth}){
 						if ($Configs{Debug}) { logDebug("\nAction: '$sCmd' Args: '$sArgs'\n"); }
 						## REPEAT command is catched at another point not here
 						if ($sCmd ne 'REPEAT'){
@@ -11224,10 +11233,10 @@ sub process_line{
 						
 						if ($sCmd eq 'EVAL'){
 							# By passing the original args as well, we allow the eval to execute nice custom commands
-							($sResult, $bContinued, $bError) = &{$aActionCommands{$sCmd}->{command}}($idSession, $sArgs, $sArgsOriginal);
+							($sResult, $bContinued, $bError) = &{$Commands{$sCmd}->{command}}($idSession, $sArgs, $sArgsOriginal);
 						}
 						else{
-							($sResult, $bContinued, $bError) = &{$aActionCommands{$sCmd}->{command}}($idSession, $sArgs);
+							($sResult, $bContinued, $bError) = &{$Commands{$sCmd}->{command}}($idSession, $sArgs);
 						}
 						
 						
@@ -11312,9 +11321,9 @@ sub process_line{
 				
 				$thisSession->{command} = '';
 				
-				if (exists($aActionCommands{$sCmdRef})){
-					if ($aActionCommands{$sCmdRef}->{auth} <= $thisSession->{auth}){
-						($sResult, $bContinued, $bError) = &{$aActionCommands{$sCmdRef}->{command}}($idSession, '');	
+				if (exists($Commands{$sCmdRef})){
+					if ($Commands{$sCmdRef}->{auth} <= $thisSession->{auth}){
+						($sResult, $bContinued, $bError) = &{$Commands{$sCmdRef}->{command}}($idSession, '');	
 					}
 					else{
 						$sResult = "-- ERROR: Not enough permissions to execute \"$sCmdRef\"";	
