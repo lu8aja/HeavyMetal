@@ -29,7 +29,7 @@
 # v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 # v3.1.004 2013-03-25 New: Support for External codes & External Custom Commands. Remote Control.
 # v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
-# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY 
+# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY. Twitter deprecated its RSS API.
 #
 # Special thanks to Jim Haynes for his help in making HM3 run in Linux.
 # Special thanks to Steve Garrison for his help in testing HM3 in Windows.
@@ -291,14 +291,15 @@ $Configs{'RSS.Feed.WEATHER.US.NEWYORK'} = 'http://weather.yahooapis.com/forecast
 
 
 # TWITTER Gateway
-$Configs{'RSS.Feed.TWITTER.TELETYPES'} = 'http://api.twitter.com/1/statuses/user_timeline.rss?screen_name=teletypes';
+# Twitter API via RSS was deprecated long ago
+# $Configs{'RSS.Feed.TWITTER.TELETYPES'} = 'http://api.twitter.com/1/statuses/user_timeline.rss?screen_name=teletypes';
 
 # Defaults for favorite menues
 $Configs{'RSS.Menu.0'} = 'TITLES REUTERS';
 $Configs{'RSS.Menu.1'} = 'SUMMARY AP';
 $Configs{'RSS.Menu.2'} = 'FULL BBC.WORLD';
 
-$Configs{'Twitter.Menu.0'} = 'teletypes';
+#$Configs{'Twitter.Menu.0'} = 'teletypes';
 
 $Configs{'WeatherFavorite.0'} = 'New York, NY, US';
 
@@ -1917,20 +1918,19 @@ sub initialize_menu {
 	$oTkMenues{Internet}->add_command(-label => "    List contacts", -command  => [\&menu_execute, $sEscape."MSN LIST\n"]);
 
 	
-	# Internet - TWITTER
-	$oTkMenues{Internet}->add_separator;
-	$oTkMenues{Internet}->add_command(-label => "Twitter", -font =>"FontMenuGroup", -command  => [\&menu_execute, $sEscape."TWITTER\n"]);
-
-	$oTkMenues{TwitterAccounts} = $oTkMenues{Main}->new_menu();
-	$oTkMenues{Internet}->add_cascade(-label => "    Check twits for",	-menu => $oTkMenues{TwitterAccounts});
-	my $nCount = 0;
-	for my $sKey (sort keys %Configs){
-		if ($sKey =~ /^Twitter.Menu\.\d+$/ && $Configs{$sKey} ne ''){
-			$nCount++;
-			$oTkMenues{TwitterAccounts}->add_command(-label => $Configs{$sKey}, -command => [\&menu_execute, $sEscape."TWITTER $Configs{$sKey}\n"]);
-		}
-	}
-	$oTkMenues{TwitterAccounts}->add_command(-label=>'- Click here to change your favorites -', -font => 'FontMenuNote', -command => sub {$oTkControls{MainTabs}->select($oTkControls{TabFavorites});});
+	# Internet - TWITTER  (Twitter deprecated its RSS API)
+	#$oTkMenues{Internet}->add_separator;
+	#$oTkMenues{Internet}->add_command(-label => "Twitter", -font =>"FontMenuGroup", -command  => [\&menu_execute, $sEscape."TWITTER\n"]);
+	#$oTkMenues{TwitterAccounts} = $oTkMenues{Main}->new_menu();
+	#$oTkMenues{Internet}->add_cascade(-label => "    Check twits for",	-menu => $oTkMenues{TwitterAccounts});
+	#my $nCount = 0;
+	#for my $sKey (sort keys %Configs){
+	#	if ($sKey =~ /^Twitter.Menu\.\d+$/ && $Configs{$sKey} ne ''){
+	#		$nCount++;
+	#		$oTkMenues{TwitterAccounts}->add_command(-label => $Configs{$sKey}, -command => [\&menu_execute, $sEscape."TWITTER $Configs{$sKey}\n"]);
+	#	}
+	#}
+	#$oTkMenues{TwitterAccounts}->add_command(-label=>'- Click here to change your favorites -', -font => 'FontMenuNote', -command => sub {$oTkControls{MainTabs}->select($oTkControls{TabFavorites});});
 	
 	
 	# Internet - HTTP/FTP
@@ -2514,7 +2514,8 @@ sub initialize_tab_favorites{
 
 	UI_addControlsFamily($tkFrame, 'RSS.Menu',        'News favorites (at the Menu "Newswire")', 9, 3, 'Feed');
 	
-	UI_addControlsFamily($tkFrame, 'Twitter.Menu',    'Twitter feeds (at the Menu "Internet")', 6, 3, 'Nick');
+	# Twitter deprecated its RSS API
+	#UI_addControlsFamily($tkFrame, 'Twitter.Menu',    'Twitter feeds (at the Menu "Internet")', 6, 3, 'Nick');
 	
 	UI_addControlsFamily($tkFrame, 'CommandMenu',     'Favorite Commands (at Menu "Commands")', 9, 3, 'Cmd');
 	
