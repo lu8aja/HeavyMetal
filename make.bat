@@ -1,0 +1,1 @@
+\perl\site\bin\pp --gui --icon=icons/heavymetal.ico --output=heavymetal.exe heavymetal.pl
