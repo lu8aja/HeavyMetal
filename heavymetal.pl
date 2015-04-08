@@ -29,7 +29,7 @@
 # v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 # v3.1.004 2013-03-25 New: Support for External codes & External Custom Commands. Remote Control.
 # v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
-# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY. Twitter deprecated its RSS API.
+# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY. Twitter deprecated its RSS API. MSN deprecated.
 #
 # Special thanks to Jim Haynes for his help in making HM3 run in Linux.
 # Special thanks to Steve Garrison for his help in testing HM3 in Windows.
@@ -63,7 +63,7 @@ v3.1.002 2012-03-25 Added METAR HISTORIC. New: Twitter via RSS, BANNER module, C
 v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 v3.1.004 2013-03-25 New: Support External codes & External Commands. Remote Control.
 v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
-v3.2.001 2015-04-08 Readded AP Today in history via custom command TODAY 
+v3.2.001 2015-04-08 Readded AP Today in history via custom command TODAY. MSN & Twitter removed.
 See:
   http://albinarrate.com/heavymetal.html
   http://github.com/lu8aja/HeavyMetal";
@@ -132,7 +132,7 @@ $Modules{'Finance::YahooQuote'}= {order => $n++, loaded => 0, required => 0, os 
 $Modules{'Digest::MD5'}        = {order => $n++, loaded => 0, required => 0, os => '', args => "('md5','md5_hex','md5_base64')"};
 $Modules{'Digest::SHA1'}       = {order => $n++, loaded => 0, required => 0, os => '', args => "('sha1','sha1_hex','sha1_base64')"};
 $Modules{'Crypt::SSLeay'}      = {order => $n++, loaded => 0, required => 0, os => ''};
-$Modules{'MSN'}                = {order => $n++, loaded => 0, required => 0, os => ''};
+#$Modules{'MSN'}                = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'Cwd'}                = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'Data::Dumper'}       = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'JSON'}               = {order => $n++, loaded => 0, required => 0, os => ''};
@@ -216,11 +216,11 @@ $Configs{HMNetEmail}  = 'Contact Email';
 $Configs{HMNetUrl}    = 'http://albinarrate.com/heavymetal/';
 	
 #- - - - - - - - - - MSN Configs - - - - - - - - - - - - - - - - - - - - -
-$Configs{MsnEnabled}  = 0;                   
-$Configs{MsnUsername} = '';
-$Configs{MsnPassword} = '';
-$Configs{MsnListen}   = 0;                   
-$Configs{MsnDebug}    = 0;
+#$Configs{MsnEnabled}  = 0;                   
+#$Configs{MsnUsername} = '';
+#$Configs{MsnPassword} = '';
+#$Configs{MsnListen}   = 0;                   
+#$Configs{MsnDebug}    = 0;
 
 #- - - - - - - - - - TTY Configs - - - - - - - - - - - - - - - - - - - - -
 $Configs{'TTY.1.Port'} = "OFF";
@@ -552,12 +552,12 @@ my $oTelnetExceptionSet; # IO Select Set for Socket EXCEPTION
 #- - - - - - - - - - Msn - - - - - - - - - - - - - - - - - - - -
 
 # Global vars
-my $MsnConnected   = 0;
-my $MsnLastContact = '';
-my $MsnConnectBy   = 0;
-my $oMSN;
-my %MsnInboundRoute;
-my %MsnContactsRedirected;
+#my $MsnConnected   = 0;
+#my $MsnLastContact = '';
+#my $MsnConnectBy   = 0;
+#my $oMSN;
+#my %MsnInboundRoute;
+#my %MsnContactsRedirected;
 
 
 #-- X10 stuff
@@ -622,7 +622,8 @@ my %aActionCommands = (
 	'MSG'       => {command => \&do_msg,             auth => 2, help => 'Send a message to a target',       args => 'target message'},
 	'SEND'      => {command => \&do_send,            auth => 3, help => 'Send a message to a target without source label',     args => 'target message -or- target command'},
 	'SENDFILE'  => {command => \&do_sendfile,        auth => 3, help => 'Send file contents to a target without source label', args => 'target filename'},
-	'MSN'       => {command => \&do_msn,             auth => 2, help => 'Interact with MSN (See help)',       args => 'On/Off/List'},
+# MSN No longer exists...
+#	'MSN'       => {command => \&do_msn,             auth => 2, help => 'Interact with MSN (See help)',       args => 'On/Off/List'},
 	'HMNET'     => {command => \&do_hmnet,           auth => 3, help => 'Interact with HMNET (See help)',     args => 'On/Off/List/Connect'},
 	'BANNER'    => {command => \&do_banner,          auth => 2, help => 'Generate a banner',                  args => 'banner-text'},
 	'CHECKMAIL' => {command => \&do_email_fetch,     auth => 3, help => 'Check POP email',                    args => 'No args'},
@@ -857,11 +858,12 @@ my %aConfigDefinitions = (
 	EscapeEnabled   => {help => 'Enable cmd escapes'},
 	GuestPassword   => {help => 'Password for GUEST sessions'},
 	LoopTest        => {help => 'Skip data in-out to loop'},
-	MsnDebug        => {help => 'Enabled debug of MSN protocol'},
-	MsnEnabled      => {help => 'Enable MSN account'},
-	MsnListen       => {help => 'Broadcast msgs from unauthenticated users'},
-	MsnPassword     => {help => 'MSN account password'},
-	MsnUsername     => {help => 'MSN account username'},
+# MSN No longer exists
+#	MsnDebug        => {help => 'Enabled debug of MSN protocol'},
+#	MsnEnabled      => {help => 'Enable MSN account'},
+#	MsnListen       => {help => 'Broadcast msgs from unauthenticated users'},
+#	MsnPassword     => {help => 'MSN account password'},
+#	MsnUsername     => {help => 'MSN account username'},
 	HMNetName       => {help => 'HMNet Sation Name'},
 	HMNetPass       => {help => 'HMNet Sation Password'},
 	HMNetOwner      => {help => 'HMNet Owner'},
@@ -1240,9 +1242,9 @@ my @aWeatherStates = qw(AK AL AR AZ BC CA CO CT DE FL GA HI HN IA ID IL IN KS KY
 			telnet_init();
 		}
 		
-		if ($Configs{MsnEnabled}){
-			msn_init();
-		}
+#		if ($Configs{MsnEnabled}){
+#			msn_init();
+#		}
 		
 		logDebug("\nHeavy Metal initialization complete, ".get_datetime().$lf);
 		
@@ -1364,19 +1366,19 @@ sub main_loop {
 #	}
 
 	if ($nShutDown > 0){
-		if ($Configs{MsnEnabled}){
-			my $nCountPendingMsn = 0;
-			foreach my $thisSession (@aSessions){
-				if ($thisSession->{'status'} && $thisSession->{'type'} eq 'MSN' && $thisSession->{OUT} ne ''){
-					$nCountPendingMsn++;
-				}
-			}
-			if ($nCountPendingMsn == 0){
-				if ($Configs{Debug} > 0){ logDebug("\nDisconnecting from MSN\n"); }
-				$oMSN->disconnect();
-				$Configs{MsnEnabled} = 0;
-			}
-		}
+#		if ($Configs{MsnEnabled}){
+#			my $nCountPendingMsn = 0;
+#			foreach my $thisSession (@aSessions){
+#				if ($thisSession->{'status'} && $thisSession->{'type'} eq 'MSN' && $thisSession->{OUT} ne ''){
+#					$nCountPendingMsn++;
+#				}
+#			}
+#			if ($nCountPendingMsn == 0){
+#				if ($Configs{Debug} > 0){ logDebug("\nDisconnecting from MSN\n"); }
+#				$oMSN->disconnect();
+#				$Configs{MsnEnabled} = 0;
+#			}
+#		}
 		
 		if (time() > $nShutDown){
 			print "\nShutdown complete! Bye Bye!\n";
@@ -1910,12 +1912,12 @@ sub initialize_menu {
 	$oTkMenues{Internet}->add_command(-label => "SMS", -font =>"FontMenuGroup");
 	$oTkMenues{Internet}->add_command(-label => "    Send SMS",                -command => [\&menu_execute, $sEscape."SMS"]);
 	
-	# Internet - MSN
-	$oTkMenues{Internet}->add_separator;
-	$oTkMenues{Internet}->add_command(-label => "MSN Messenger", -font =>"FontMenuGroup");
-	$oTkMenues{Internet}->add_command(-label => "    Enable",        -command  => [\&menu_execute, $sEscape."MSN ON\n"]);
-	$oTkMenues{Internet}->add_command(-label => "    Disable",       -command  => [\&menu_execute, $sEscape."MSN OFF\n"]);
-	$oTkMenues{Internet}->add_command(-label => "    List contacts", -command  => [\&menu_execute, $sEscape."MSN LIST\n"]);
+	# Internet - MSN (No longer exists...)
+#	$oTkMenues{Internet}->add_separator;
+#	$oTkMenues{Internet}->add_command(-label => "MSN Messenger", -font =>"FontMenuGroup");
+#	$oTkMenues{Internet}->add_command(-label => "    Enable",        -command  => [\&menu_execute, $sEscape."MSN ON\n"]);
+#	$oTkMenues{Internet}->add_command(-label => "    Disable",       -command  => [\&menu_execute, $sEscape."MSN OFF\n"]);
+#	$oTkMenues{Internet}->add_command(-label => "    List contacts", -command  => [\&menu_execute, $sEscape."MSN LIST\n"]);
 
 	
 	# Internet - TWITTER  (Twitter deprecated its RSS API)
@@ -2127,8 +2129,8 @@ sub initialize_windows {
 	$Global{Images}->{'tty-off'}     = '';
 	$Global{Images}->{'telnet-on'}   = '';
 	$Global{Images}->{'telnet-off'}  = '';
-	$Global{Images}->{'msn-on'}      = '';
-	$Global{Images}->{'msn-off'}     = '';
+#	$Global{Images}->{'msn-on'}      = '';
+#	$Global{Images}->{'msn-off'}     = '';
 
 	foreach my $sImg (keys %{$Global{Images}}){
 		if (-e "icons/icon-$sImg.gif"){
@@ -2227,12 +2229,12 @@ sub initialize_statusbar{
 	$oTkControls{"TelnetLabel"}->g_pack(-side=>'left');
 	
 	# MSN
-	if ($Global{Images}->{'msn-on'} && $Global{Images}->{'msn-off'}){
-		$oTkControls{"MsnIcon"}  = $oTkControls{FrameStatus}->new_label(-height => 32, -width => 32, -padx => 0, -image => $Global{Images}->{'msn-off'});
-		$oTkControls{"MsnIcon"}->g_pack(-side=>'left');
-	}
-	$oTkControls{"MsnLabel"} = $oTkControls{FrameStatus}->new_label(-textvariable => \$aStatusLabels{MSN} ,  -justify => 'left', -padx => 0, -width => 10, -height => 3, -anchor => 'nw');
-	$oTkControls{"MsnLabel"}->g_pack(-side=>'left');
+#	if ($Global{Images}->{'msn-on'} && $Global{Images}->{'msn-off'}){
+#		$oTkControls{"MsnIcon"}  = $oTkControls{FrameStatus}->new_label(-height => 32, -width => 32, -padx => 0, -image => $Global{Images}->{'msn-off'});
+#		$oTkControls{"MsnIcon"}->g_pack(-side=>'left');
+#	}
+#	$oTkControls{"MsnLabel"} = $oTkControls{FrameStatus}->new_label(-textvariable => \$aStatusLabels{MSN} ,  -justify => 'left', -padx => 0, -width => 10, -height => 3, -anchor => 'nw');
+#	$oTkControls{"MsnLabel"}->g_pack(-side=>'left');
 	
 	# PROGRESSBAR
 	$oTkControls{"StatusProgress"} = $oTkControls{FrameStatus}->new_ttk__progressbar(-orient => 'vertical', -mode => 'determinate', -length => 30);
@@ -2795,14 +2797,14 @@ sub initialize_tab_configs{
 	UI_addControl('TelnetEnabled', 'checkbutton', ' ', {-text => 'Enabled', -variable => \$Configs{TelnetEnabled}, -command => \&telnet_toggle, -onvalue=> 1, -offvalue => 0});
 	UI_addControl('TelnetPort', 'entry', 'Listening port', {-width => 5});
 
-	my $oTkFrameConfigsMsn = $tkLeft->new_ttk__labelframe(-text => "MSN messenger");
-	UI_setParent($oTkFrameConfigsMsn, 1, 1, [60, 100, 160]);
-	UI_addControl('MsnEnabled', 'checkbutton', '', {-text => 'Enabled', -variable => \$Configs{MsnEnabled}, -command => \&msn_toggle, -onvalue=> 1, -offvalue => 0});
-	UI_addControl('MsnListen',  'checkbutton', '', {-text => 'Listen input msgs',  -variable => \$Configs{MsnListen}, -onvalue=> 1, -offvalue => 0});
-	UI_newRow();
-	UI_addControl('MsnUsername', 'entry', 'Username', {-width => 25}, 2);
-	UI_newRow();
-	UI_addControl('MsnPassword', 'entry', 'Password', {-width => 20}, 2);
+#	my $oTkFrameConfigsMsn = $tkLeft->new_ttk__labelframe(-text => "MSN messenger");
+#	UI_setParent($oTkFrameConfigsMsn, 1, 1, [60, 100, 160]);
+#	UI_addControl('MsnEnabled', 'checkbutton', '', {-text => 'Enabled', -variable => \$Configs{MsnEnabled}, -command => \&msn_toggle, -onvalue=> 1, -offvalue => 0});
+#	UI_addControl('MsnListen',  'checkbutton', '', {-text => 'Listen input msgs',  -variable => \$Configs{MsnListen}, -onvalue=> 1, -offvalue => 0});
+#	UI_newRow();
+#	UI_addControl('MsnUsername', 'entry', 'Username', {-width => 25}, 2);
+#	UI_newRow();
+#	UI_addControl('MsnPassword', 'entry', 'Password', {-width => 20}, 2);
 
 	# RIGHT SIDE
 	my $oTkFrameConfigsMail = $tkLeft->new_ttk__labelframe(-text => "E-mail");
@@ -3569,7 +3571,7 @@ sub UI_updateStatus {
 	$aStatusLabels{TTY1}   = $Configs{"TTY.1.Port"}."\n".$Configs{"TTY.1.Code"}."\n".$aBaudRates{$Configs{"TTY.1.BaudRate"}}->{label_short}.' '.$Configs{"TTY.1.DataBits"}.uc(substr($Configs{"TTY.1.Parity"}, 0, 1)).$Configs{"TTY.1.StopBits"};
 	$aStatusLabels{TTY2}   = $Configs{"TTY.2.Port"}."\n".$Configs{"TTY.2.Code"}."\n".$aBaudRates{$Configs{"TTY.2.BaudRate"}}->{label_short}.' '.$Configs{"TTY.2.DataBits"}.uc(substr($Configs{"TTY.2.Parity"}, 0, 1)).$Configs{"TTY.2.StopBits"};
 	$aStatusLabels{Telnet} = $Configs{TelnetEnabled} ? "Telnet: ON\n$Configs{TelnetPort}" : 'Telnet: OFF';
-	$aStatusLabels{MSN}    = $Configs{MsnEnabled} ? "MSN:\n".$Configs{MsnUsername} : 'MSN: OFF';
+	#$aStatusLabels{MSN}    = $Configs{MsnEnabled} ? "MSN:\n".$Configs{MsnUsername} : 'MSN: OFF';
 
 	if ($oTkControls{"SessionIcon-1"}){
 		$oTkControls{"SessionIcon-1"}->configure(-image => ($aSessions[1]->{status}  ? $Global{Images}->{'tty-on'} : $Global{Images}->{'tty-off'}));
@@ -3580,9 +3582,9 @@ sub UI_updateStatus {
 	if ($oTkControls{"TelnetIcon"}){
 		$oTkControls{"TelnetIcon"}->configure(   -image => ($Configs{TelnetEnabled} ? $Global{Images}->{'telnet-on'} : $Global{Images}->{'telnet-off'}));
 	}
-	if ($oTkControls{"MsnIcon"}){
-		$oTkControls{"MsnIcon"}->configure(      -image => ($Configs{MsnEnabled}    ? $Global{Images}->{'msn-on'}    : $Global{Images}->{'msn-off'}));
-	}
+#	if ($oTkControls{"MsnIcon"}){
+#		$oTkControls{"MsnIcon"}->configure(      -image => ($Configs{MsnEnabled}    ? $Global{Images}->{'msn-on'}    : $Global{Images}->{'msn-off'}));
+#	}
 	
 	$oTkStatus->configure(-text => $sText);
 	Tkx::update();
@@ -3698,9 +3700,9 @@ sub process_pending_io {
 	}
 	
 	# MSN
-	if ($Configs{MsnEnabled}){
-		msn_io();
-	}
+#	if ($Configs{MsnEnabled}){
+#		msn_io();
+#	}
 	
 	return $nIdle;
 }
@@ -7709,102 +7711,102 @@ sub do_user{
 }
 
 # Interact with MSN (ON|OFF|LIST|chat target)
-sub do_msn{
-	my ($idSession, $sArgs) = @_;
-	my $sCmd = 'MSN';
-	my @aArgs = split(/\s+/, $sArgs);
-	my $sOut = '';
-
-
-	if (!$Modules{'MSN'}->{loaded} || !$Modules{'Crypt::SSLeay'}->{loaded}){
-		return ('-- ERROR: MSN perl module or dependencies not loaded', 0, 1);
-	}
-	
-	my $sMsg;
-	
-	# STATUS?
-	if (!defined($aArgs[0])){
-		if (!$Configs{MsnEnabled}){
-			$sOut  = '-- MSN is Disabled';
-		}
-		elsif (!$MsnConnected){
-			$sOut  = '-- MSN is not connected';
-		}
-		elsif($aSessions[$idSession]->{target} =~ /^MSN:/){
-			$sOut  = '-- MSN is connected as '.$Configs{MsnUsername}.' in chat with '.substr($aSessions[$idSession]->{target}, 4);
-		}
-		else{
-			$sOut  = '-- MSN is connected as '.$Configs{MsnUsername};
-		}
-	}
-	# ON|OFF
-	elsif ($aArgs[0] =~ /^(ON|OFF|0|1)$/i){
-		my $bEnable = ($aArgs[0] =~ /^(ON|1)$/i) ? 1 : 0;
-		$MsnConnectBy = $idSession;
-		$sOut = msn_toggle($bEnable);
-	}
-	elsif (!$Configs{MsnEnabled}){
-		$sOut  = '-- MSN is disabled';
-	}
-	elsif (!$MsnConnected){
-		$sOut  = '-- MSN is not connected';
-	}
-	elsif ($aArgs[0] =~ /^LIST$/i){
-		$sOut  = do_msn_list($idSession);
-	}
-	elsif (defined($aArgs[0]) && $aArgs[0] ne ''){
-		# Search from contact list (starting with)
-		my $sSearch = lc($aArgs[0]);
-		foreach (sort keys %{$oMSN->{Notification}->{Lists}->{FL}}){
-			if (lc(substr($_, 0, length($sSearch))) eq $sSearch || lc(substr($oMSN->{Notification}->{Lists}->{FL}->{$_}->{Friendly}, 0, length($sSearch))) eq $sSearch){
-				if ($oMSN->{Notification}->{Lists}->{FL}->{$_}->{Status} eq 'OFF'){
-					$sOut = "-- User $_ is offline";
-				}
-				else{
-					($sOut) = do_target($idSession, 'MSN:'.$_);
-				}
-				last;
-			}
-		}
-		if (!$sOut){
-			$sOut = '-- Contact not found in your contacts list. Use $MSN LIST';
-		}
-	}
-	else{
-		$sOut  = '-- Missing parameters. Usage: MSN [ON,OFF,LIST] -or- MSN [email|nick]';
-	}
-	
-	return $sOut;
-
-}
-
-# Show the MSN contact list
-sub do_msn_list{
-	my ($idSession, $sArgs) = @_;
-	my $sCmd = 'MSN LIST';
-
-	my $sOut = '';
-
-	if ($MsnConnected){
-		$sOut = "-- MSN Contacts:\n";
-		$sOut .= " -EMAIL---------------------- -User------- -S- -STATUS MSG----------\n";
-		foreach (sort keys %{$oMSN->{Notification}->{Lists}->{FL}}){
-			$sOut .= sprintf(" %-28.28s %-12.12s %3.3s %.21s\n", $_,  $oMSN->{Notification}->{Lists}->{FL}->{$_}->{Friendly},  $oMSN->{Notification}->{Lists}->{FL}->{$_}->{Status}, $oMSN->{Notification}->{Lists}->{FL}->{$_}->{Message});
-		}
-		
-		if (scalar(%MsnContactsRedirected) > 0){
-			$sOut .= "-- MSN Redirected Contacts:\n";
-			foreach (sort keys %MsnContactsRedirected){
-				$sOut .= sprintf(" %25s -> %25s %-s\n", $_, $MsnContactsRedirected{$_}->{Redirector}, $MsnContactsRedirected{$_}->{Email}, $MsnContactsRedirected{$_}->{Friendly});
-			}
-		}
-	}
-	else{
-		$sOut = "-- MSN Disabled or disconnected";
-	}
-	$sOut .= "-- DONE --";
-	return $sOut;	
-}
+#sub do_msn{
+#	my ($idSession, $sArgs) = @_;
+#	my $sCmd = 'MSN';
+#	my @aArgs = split(/\s+/, $sArgs);
+#	my $sOut = '';
+#
+#
+#	if (!$Modules{'MSN'}->{loaded} || !$Modules{'Crypt::SSLeay'}->{loaded}){
+#		return ('-- ERROR: MSN perl module or dependencies not loaded', 0, 1);
+#	}
+#	
+#	my $sMsg;
+#	
+#	# STATUS?
+#	if (!defined($aArgs[0])){
+#		if (!$Configs{MsnEnabled}){
+#			$sOut  = '-- MSN is Disabled';
+#		}
+#		elsif (!$MsnConnected){
+#			$sOut  = '-- MSN is not connected';
+#		}
+#		elsif($aSessions[$idSession]->{target} =~ /^MSN:/){
+#			$sOut  = '-- MSN is connected as '.$Configs{MsnUsername}.' in chat with '.substr($aSessions[$idSession]->{target}, 4);
+#		}
+#		else{
+#			$sOut  = '-- MSN is connected as '.$Configs{MsnUsername};
+#		}
+#	}
+#	# ON|OFF
+#	elsif ($aArgs[0] =~ /^(ON|OFF|0|1)$/i){
+#		my $bEnable = ($aArgs[0] =~ /^(ON|1)$/i) ? 1 : 0;
+#		$MsnConnectBy = $idSession;
+#		$sOut = msn_toggle($bEnable);
+#	}
+#	elsif (!$Configs{MsnEnabled}){
+#		$sOut  = '-- MSN is disabled';
+#	}
+#	elsif (!$MsnConnected){
+#		$sOut  = '-- MSN is not connected';
+#	}
+#	elsif ($aArgs[0] =~ /^LIST$/i){
+#		$sOut  = do_msn_list($idSession);
+#	}
+#	elsif (defined($aArgs[0]) && $aArgs[0] ne ''){
+#		# Search from contact list (starting with)
+#		my $sSearch = lc($aArgs[0]);
+#		foreach (sort keys %{$oMSN->{Notification}->{Lists}->{FL}}){
+#			if (lc(substr($_, 0, length($sSearch))) eq $sSearch || lc(substr($oMSN->{Notification}->{Lists}->{FL}->{$_}->{Friendly}, 0, length($sSearch))) eq $sSearch){
+#				if ($oMSN->{Notification}->{Lists}->{FL}->{$_}->{Status} eq 'OFF'){
+#					$sOut = "-- User $_ is offline";
+#				}
+#				else{
+#					($sOut) = do_target($idSession, 'MSN:'.$_);
+#				}
+#				last;
+#			}
+#		}
+#		if (!$sOut){
+#			$sOut = '-- Contact not found in your contacts list. Use $MSN LIST';
+#		}
+#	}
+#	else{
+#		$sOut  = '-- Missing parameters. Usage: MSN [ON,OFF,LIST] -or- MSN [email|nick]';
+#	}
+#	
+#	return $sOut;
+#
+#}
+#
+## Show the MSN contact list
+#sub do_msn_list{
+#	my ($idSession, $sArgs) = @_;
+#	my $sCmd = 'MSN LIST';
+#
+#	my $sOut = '';
+#
+#	if ($MsnConnected){
+#		$sOut = "-- MSN Contacts:\n";
+#		$sOut .= " -EMAIL---------------------- -User------- -S- -STATUS MSG----------\n";
+#		foreach (sort keys %{$oMSN->{Notification}->{Lists}->{FL}}){
+#			$sOut .= sprintf(" %-28.28s %-12.12s %3.3s %.21s\n", $_,  $oMSN->{Notification}->{Lists}->{FL}->{$_}->{Friendly},  $oMSN->{Notification}->{Lists}->{FL}->{$_}->{Status}, $oMSN->{Notification}->{Lists}->{FL}->{$_}->{Message});
+#		}
+#		
+#		if (scalar(%MsnContactsRedirected) > 0){
+#			$sOut .= "-- MSN Redirected Contacts:\n";
+#			foreach (sort keys %MsnContactsRedirected){
+#				$sOut .= sprintf(" %25s -> %25s %-s\n", $_, $MsnContactsRedirected{$_}->{Redirector}, $MsnContactsRedirected{$_}->{Email}, $MsnContactsRedirected{$_}->{Friendly});
+#			}
+#		}
+#	}
+#	else{
+#		$sOut = "-- MSN Disabled or disconnected";
+#	}
+#	$sOut .= "-- DONE --";
+#	return $sOut;	
+#}
 
 # KICK a session, only usefull for Telnet and MSN sessions
 sub do_kick {
@@ -7823,11 +7825,11 @@ sub do_kick {
 						$thisSession->{OUT} .= "\r\nYou have been kicked by $idSession! Bye Bye!\r\n";
 						$sOut .= sprintf("-- Kicked Session: %d  - Address %s  - User: %s\n", $thisSession->{'id'}, $thisSession->{'address'}, $thisSession->{'user'});
 					}
-					elsif($thisSession->{type} eq 'MSN'){
-						$thisSession->{status} = 0;
-						$thisSession->{OUT} .= "\r\nYou have been kicked by $idSession! Bye Bye!\r\n";
-						$sOut .= sprintf("-- Kicked Session: %d  - Address %s  - User: %s\n", $thisSession->{'id'}, $thisSession->{'address'}, $thisSession->{'user'});
-					}
+#					elsif($thisSession->{type} eq 'MSN'){
+#						$thisSession->{status} = 0;
+#						$thisSession->{OUT} .= "\r\nYou have been kicked by $idSession! Bye Bye!\r\n";
+#						$sOut .= sprintf("-- Kicked Session: %d  - Address %s  - User: %s\n", $thisSession->{'id'}, $thisSession->{'address'}, $thisSession->{'user'});
+#					}
 				}
 			}
 
@@ -7967,28 +7969,28 @@ sub do_target {
 				$bError = 1;
 			}
 		}
-		elsif($xTarget =~ /^MSN\:/i){
-			$nVal = session_set($nId, 'target', $xTarget);
-			if (defined($nVal) && $nVal > 0){
-				$sOut = "-- New MSN Target for $nId is: $xTarget";
-				my $sMsnTargetUser = lc(substr($xTarget, 4));
-				
-				print "ROUTE: '$sMsnTargetUser'\n";
-				if (exists $MsnInboundRoute{$sMsnTargetUser}){
-					# If the target is not already there we add it
-					if (!in_array($MsnInboundRoute{$sMsnTargetUser}, $nId)){
-						push(@{$MsnInboundRoute{$sMsnTargetUser}}, $nId);
-					}
-				}
-				else{
-					$MsnInboundRoute{$sMsnTargetUser} = [$nId];
-				}
-			}
-			else{
-				$sOut = "-- ERROR: Unknown session id to set its Target";
-				$bError = 1;
-			}
-		}
+#		elsif($xTarget =~ /^MSN\:/i){
+#			$nVal = session_set($nId, 'target', $xTarget);
+#			if (defined($nVal) && $nVal > 0){
+#				$sOut = "-- New MSN Target for $nId is: $xTarget";
+#				my $sMsnTargetUser = lc(substr($xTarget, 4));
+#				
+#				print "ROUTE: '$sMsnTargetUser'\n";
+#				if (exists $MsnInboundRoute{$sMsnTargetUser}){
+#					# If the target is not already there we add it
+#					if (!in_array($MsnInboundRoute{$sMsnTargetUser}, $nId)){
+#						push(@{$MsnInboundRoute{$sMsnTargetUser}}, $nId);
+#					}
+#				}
+#				else{
+#					$MsnInboundRoute{$sMsnTargetUser} = [$nId];
+#				}
+#			}
+#			else{
+#				$sOut = "-- ERROR: Unknown session id to set its Target";
+#				$bError = 1;
+#			}
+#		}
 		else{
 			$xTarget = uc($xTarget);
 			# We will automatically assign the target for outbound connections too
@@ -8617,7 +8619,7 @@ sub do_hmreport {
 	$oData->{Configs}->{SystemPassword} = '';
 	$oData->{Configs}->{HMNetPass}      = '';
 	$oData->{Configs}->{EmailPassword}  = '';
-	$oData->{Configs}->{MsnPassword}    = '';
+	#$oData->{Configs}->{MsnPassword}    = '';
 	$oData->{Configs}->{'SMS.Password'} = '';
 	
 	my $rParams = {};
@@ -10966,24 +10968,24 @@ sub message_send{
 	elsif ($xTarget =~ /^[\w-]+$/){
 		$nSendType = 3;
 	}
-	elsif ($inTarget =~ /^MSN:([\w\.\-]+\@\w+[\w\.\-]+\.\w+)$/i){
-		# Deliver external message directly to MSN
-		my $sMsnTarget      = $1;
-		
-		if (!$Configs{MsnEnabled}){
-			return 'MSN is not enabled';
-		}
-		elsif(!$MsnConnected){
-			return 'MSN is not connected';
-		}
-		else{
-			my $sSource = ($idSource =~ /^\d+$/) ? $aSessions[$idSource]->{user} : $idSource;
-			
-			$oMSN->call($sMsnTarget, $sText, 'Name'=>'TTY-MSN '.$sSource, 'Effect' => '', 'Color' => '000000', 'Font' => 'Courier');
-		}
-
-		return 1;
-	}
+#	elsif ($inTarget =~ /^MSN:([\w\.\-]+\@\w+[\w\.\-]+\.\w+)$/i){
+#		# Deliver external message directly to MSN
+#		my $sMsnTarget      = $1;
+#		
+#		if (!$Configs{MsnEnabled}){
+#			return 'MSN is not enabled';
+#		}
+#		elsif(!$MsnConnected){
+#			return 'MSN is not connected';
+#		}
+#		else{
+#			my $sSource = ($idSource =~ /^\d+$/) ? $aSessions[$idSource]->{user} : $idSource;
+#			
+#			$oMSN->call($sMsnTarget, $sText, 'Name'=>'TTY-MSN '.$sSource, 'Effect' => '', 'Color' => '000000', 'Font' => 'Courier');
+#		}
+#
+#		return 1;
+#	}
 	
 	if ($nSendType == 0){
 		return;
@@ -11070,9 +11072,9 @@ sub message_deliver{
 			$sOutText .= $lf;
 		}
 	}
-	elsif ($thisSession->{type} eq 'MSN'){
-
-	}
+#	elsif ($thisSession->{type} eq 'MSN'){
+#
+#	}
 	elsif ($thisSession->{type} eq 'TELNET'){
 
 		# Outbound
@@ -11352,318 +11354,318 @@ sub process_line{
 # - - - - - - - - - - - - - - MSN MESSENGER - - - - - - - - - - - - - - -
 #------------------------------------------------------------------------
 
-sub msn_init{
-	
-	# Check dependencies
-	if ( !$Modules{'MSN'}->{loaded}           || !$Modules{'URI::Escape'}->{loaded}    || !$Modules{'Data::Dumper'}->{loaded}
-	  || !$Modules{'HTTP::Request'}->{loaded} || !$Modules{'LWP::UserAgent'}->{loaded} || !$Modules{'HTML::Entities'}->{loaded}
-	  || !$Modules{'Digest::MD5'}->{loaded}   || !$Modules{'Digest::SHA1'}->{loaded}   || !$Modules{'Math::BigInt'}->{loaded}
-	  || !$Modules{'MIME::Base64'}->{loaded}
-	)
-	{
-		# Block and disable MSN itself
-		$Modules{'MSN'}->{loaded} = 0;
-		$Configs{MsnEnabled} = 0;
-		
-		if ($Configs{Debug}){ logDebug("\nMSN disabled due to dependencies not fulfilled\n");}
-		
-		return 0;
-	}
-	
-	
-	if ($Configs{MsnEnabled}){
-		
-		if ($Configs{MsnDebug} == 1){
-			# create an MSN object showing all server errors and other errors
-			$oMSN = new MSN('Handle' => $Configs{MsnUsername}, 'Password' => $Configs{MsnPassword});
-		}
-		elsif ($Configs{MsnDebug} == 2){
-			# OR create an MSN object with full debugging info
-			$oMSN = new MSN('Handle' => $Configs{MsnUsername}, 'Password' => $Configs{MsnPassword}, 'AutoloadError' => 1, 'Debug' => 1, 'ShowTX' => 1, 'ShowRX' => 1 );
-		}
-		else{
-			# OR create an MSN object with all error messages turned off
-			$oMSN = new MSN('Handle' => $Configs{MsnUsername}, 'Password' => $Configs{MsnPassword}, 'ServerError' => 0, 'Error' => 0 );
-		}
-		
-		
-		# example of setting client info
-		$oMSN->setClientInfo('Client' => 'MSNC2');
-		
-		# example of setting client capabilites (caps)
-		$oMSN->setClientCaps('Client-Name' => "HeavyMetal v$sGlobalVersion ($sGlobalRelease)", 'Chat-Logging' => 'N', 'Client-Template' => 'None');
-		
-		# example of setting the default message style and P4 name
-		$oMSN->setMessageStyle('Effect' => '', 'Color' => '000000', 'Name' => 'TTY-MSN', 'Font' => 'Courier');
-		
-		
-		# set handlers
-		$oMSN->setHandler('Connected'    => \&msn_statusConnected );
-		$oMSN->setHandler('Disconnected' => \&msn_statusDisconnected);
-		$oMSN->setHandler('Message'      => \&msn_receiveMessage );
-		
-		
-		# connect to the server
-		$oMSN->connect();
-		
-	}
-}
-
-
-
-sub msn_toggle{
-	my ($bEnable) = @_;
-	if (defined $bEnable){
-		$Configs{MsnEnabled} = $bEnable;
-	}
-	
-	my $sOut = '';
-	if ($Configs{MsnEnabled}){
-		if ($Configs{MsnUsername} ne ''){
-			if ($Configs{Debug}){ logDebug("\nEnabled MSN: $Configs{MsnUsername}\n"); }
-			
-			UI_updateStatus("Connecting to MSN...\nWindow may freeze for a few seconds!");
-			
-			if (defined $oMSN){
-				# connect to the server
-				$oMSN->connect();
-				
-			}
-			else{
-				msn_init();
-			}
-			
-			
-			$sOut = '-- MSN Connecting';
-		}
-		else{
-			$sOut = '-- ERROR: MSN not configured';
-			$Configs{MsnEnabled} = 0;
-		}
-	}
-	else{
-		if ($Configs{Debug} > 0){ logDebug("\nDisabled MSN\n"); }
-		if (defined $oMSN){
-			# connect to the server
-			$oMSN->disconnect();
-		}
-		UI_updateStatus();
-		$sOut = '-- MSN Disconnected';
-	}
-	return $sOut;
-}
-
-
-
-sub msn_io{
-	if ($Configs{MsnEnabled} && defined $oMSN){
-		
-		foreach my $thisSession (@aSessions){
-			if ($thisSession->{'status'} && $thisSession->{'type'} eq 'MSN'){
-				if ($thisSession->{'direction'} == 0){
-					if (length($thisSession->{OUT}) > 0){
-						
-						my $sMsg = '';
-						# Decently cut long messages by lines
-						if (length($thisSession->{OUT}) < 1400 || index($thisSession->{OUT}, $lf) < 0){
-							$sMsg = $thisSession->{OUT};
-							$thisSession->{OUT} = '';
-						}
-						else{
-							# Get the initial line
-							my $nPos = index($thisSession->{OUT}, $lf);
-							$sMsg .= substr($thisSession->{OUT}, 0, $nPos + 1, '');
-							
-							$nPos = index($thisSession->{OUT}, $lf);
-							while(length($thisSession->{OUT}) > 0 && $nPos >= 0 && (length($sMsg) + $nPos) < 1300){
-								# Add as many lines as possible before reaching the limit or reaching the last line
-								$sMsg .= substr($thisSession->{OUT}, 0, $nPos + 1, '');
-								$nPos  = index($thisSession->{OUT}, $lf);
-							}
-							if (length($thisSession->{OUT}) > 0 && $nPos < 0){
-								# If we still have a last line and we can add it, then do it
-								if ((length($sMsg) + length($thisSession->{OUT})) < 1300){
-									$sMsg .= $thisSession->{OUT};
-									$thisSession->{OUT} = '';
-								}
-							}
-						}
-						
-						chomp($sMsg);
-						
-						$oMSN->call($thisSession->{'address'}, $sMsg, 'Effect' => '', 'Color' => '000000', 'Font' => 'Courier');
-						
-						
-						if ($thisSession->{input_type} eq 'OUT-EMPTY' && length($thisSession->{OUT}) == 0){
-							# Detect and execute commands once the OUT buffer is empty
-							process_line($thisSession->{id}, '');
-						}
-
-						
-					}
-					elsif ($thisSession->{'disconnect'} > 0){
-						$thisSession->{'status'} = 0;
-					}
-				}
-			}
-		}
-		
-		$oMSN->do_one_loop();
-	}
-
-
-	return 1;
-}
-
-sub msn_statusConnected{
-	my $self = shift;
-
-	if ($Configs{Debug} > 0){ logDebug("\nMSN Connected as $Configs{MsnUsername}\n" ); }
-
-	$MsnConnected = 1;
-
-	UI_updateStatus();
-	message_send('SYS', $MsnConnectBy, "-- MSN Connected as $Configs{MsnUsername}");
-	
-	#$oMSN->{Notification}->send( 'LST', 'FL');
-
-	# example of a call with style and P4 name
-	#$msn->call( $admin, "I am connected!", 'Effect' => 'BI', 'Color' => '00FF00', 'Name' => 'TTY' );
-}
-
-sub msn_statusDisconnected{
-	my $self = shift;
-
-	if ($Configs{Debug} > 0){ logDebug("MSN $Configs{MsnUsername} Disconnected\n" );  }
-	
-	$MsnConnected = 0;
-	
-	UI_updateStatus();
-	message_send('SYS', $MsnConnectBy, "-- MSN $Configs{MsnUsername} Disconnected");
-}
-
-sub msn_receiveMessage{
-	my ($self, $sAddress, $sName, $sMessage, %aStyle) = @_;
-
-	my $sSourceEmail;
-	#my $sSourceUser;
-
-	if ($sMessage eq ''){
-		return 0;
-	}
-
-	$aStyle{'Color'}  = '000000';
-	$aStyle{'Font'}   = 'Courier';
-	$aStyle{'Effect'} = '';
-		
-	my $sOut = '';
-
-	#$sMessage = decode("utf8", $sMessage);
-	if ($sMessage =~ /<msnobj creator="([\w-\.]+\@[\w-\.]+)".+?>/i){
-		$sSourceEmail  = $1;
-		#$sSourceUser   = decode("utf16", decode_base64(chr(0xfe).chr(0xff).$2));
-		
-		if ($sSourceEmail ne $sAddress){
-			$MsnContactsRedirected{$sSourceEmail} = {'Email' => $sSourceEmail, 'Redirector' => $sAddress};
-			
-			if ($Configs{Debug} > 1){ logDebug("\nMSN Decoded: $sSourceEmail"); }
-		}
-		
-		$sMessage =~ s/<msnobj.+?>//i;
-	}
-
-
-	if ($Configs{Debug} > 0){ logDebug("\nMSN $sAddress: $sMessage"); }
-
-	my $idSession = session_get("address=$sAddress", 'id');
-
-	if (!defined $idSession){
-		# UNAUTHENTICATED
-		if (substr($sMessage, 0, 1) eq $Configs{EscapeChar}){
-			# Generic commands allowed to anyone
-			
-			# PING		
-			if( $sMessage =~ /^.ping$/i ){
-				$sOut = 'PONG!';
-			}
-			# LOGIN
-			elsif($sMessage =~ /^.login(\s+(\S.*))?$/i ){
-				my $sArgs = $2;
-				$sOut = do_login(undef, $sArgs); 
-				
-				if ($sOut eq 'OK'){
-					$nSessionsCount++;
-					
-					my $idSession  = $NewSessionId++;
-				
-					$aSessions[$idSession] = {
-						'id'          => $idSession, 
-						'type'        => 'MSN', 
-						'IN'          => '', 
-						'OUT'         => '',
-						'status'      => 1, 
-						'direction'   => 0, 
-						'auth'        => 0, 
-						'user'        => '', 
-						'target'      => 'ALL', 
-						'source'      => 'ALL', 
-						'remote_ip'   => '',
-						'remote_port' => '',
-						'prompt'      => 0,
-						'disconnect'  => 0,
-						'address'     => $sAddress,
-						'COMMANDS'    => [],
-						'command_num' => -1,
-						'input_type'  => '', 
-						'input_var'   => '', 
-						'input_prompt'=> '',
-						'echo_input'  => 1,
-						'echo_msg'    => 0, 
-						'command'     => '',
-						'label'       => 1
-					};
-					
-					# We call it a second time to get the correct result string in a unified way for all session types
-					$sOut = do_login($idSession, $sArgs);
-				}
-				else{
-					$aStyle{'Color'} = 'FF0000';
-				}
-			}
-	
-			# Catchall for unauthenticated sessions
-			elsif (!defined $idSession){
-				$aStyle{'Color'} = 'FF0000';
-				$sOut = "-- Unauthenticated user";
-			}
-		}
-		elsif(exists $MsnInboundRoute{lc($sAddress)}){
-			for (@{$MsnInboundRoute{lc($sAddress)}}){
-				message_send("MSN $sAddress", $_, $sMessage);
-			}
-		}
-		elsif($Configs{MsnListen}){
-			if (defined $sSourceEmail){
-				message_send("MSN $sSourceEmail", 'IN', $sMessage);
-			}
-			else{
-				message_send("MSN $sAddress", 'IN', $sMessage);
-			}
-			
-		}
-	}
-	else{
-		#AUTHENTICATED
-		process_line($idSession, $sMessage);
-	}
-	
-	if ($sOut ne ''){
-		$sOut =~ tr/\r//;
-		$self->sendMessage($sOut, %aStyle);
-	}
-
-	return 1;
-}
+#sub msn_init{
+#	
+#	# Check dependencies
+#	if ( !$Modules{'MSN'}->{loaded}           || !$Modules{'URI::Escape'}->{loaded}    || !$Modules{'Data::Dumper'}->{loaded}
+#	  || !$Modules{'HTTP::Request'}->{loaded} || !$Modules{'LWP::UserAgent'}->{loaded} || !$Modules{'HTML::Entities'}->{loaded}
+#	  || !$Modules{'Digest::MD5'}->{loaded}   || !$Modules{'Digest::SHA1'}->{loaded}   || !$Modules{'Math::BigInt'}->{loaded}
+#	  || !$Modules{'MIME::Base64'}->{loaded}
+#	)
+#	{
+#		# Block and disable MSN itself
+#		$Modules{'MSN'}->{loaded} = 0;
+#		$Configs{MsnEnabled} = 0;
+#		
+#		if ($Configs{Debug}){ logDebug("\nMSN disabled due to dependencies not fulfilled\n");}
+#		
+#		return 0;
+#	}
+#	
+#	
+#	if ($Configs{MsnEnabled}){
+#		
+#		if ($Configs{MsnDebug} == 1){
+#			# create an MSN object showing all server errors and other errors
+#			$oMSN = new MSN('Handle' => $Configs{MsnUsername}, 'Password' => $Configs{MsnPassword});
+#		}
+#		elsif ($Configs{MsnDebug} == 2){
+#			# OR create an MSN object with full debugging info
+#			$oMSN = new MSN('Handle' => $Configs{MsnUsername}, 'Password' => $Configs{MsnPassword}, 'AutoloadError' => 1, 'Debug' => 1, 'ShowTX' => 1, 'ShowRX' => 1 );
+#		}
+#		else{
+#			# OR create an MSN object with all error messages turned off
+#			$oMSN = new MSN('Handle' => $Configs{MsnUsername}, 'Password' => $Configs{MsnPassword}, 'ServerError' => 0, 'Error' => 0 );
+#		}
+#		
+#		
+#		# example of setting client info
+#		$oMSN->setClientInfo('Client' => 'MSNC2');
+#		
+#		# example of setting client capabilites (caps)
+#		$oMSN->setClientCaps('Client-Name' => "HeavyMetal v$sGlobalVersion ($sGlobalRelease)", 'Chat-Logging' => 'N', 'Client-Template' => 'None');
+#		
+#		# example of setting the default message style and P4 name
+#		$oMSN->setMessageStyle('Effect' => '', 'Color' => '000000', 'Name' => 'TTY-MSN', 'Font' => 'Courier');
+#		
+#		
+#		# set handlers
+#		$oMSN->setHandler('Connected'    => \&msn_statusConnected );
+#		$oMSN->setHandler('Disconnected' => \&msn_statusDisconnected);
+#		$oMSN->setHandler('Message'      => \&msn_receiveMessage );
+#		
+#		
+#		# connect to the server
+#		$oMSN->connect();
+#		
+#	}
+#}
+#
+#
+#
+#sub msn_toggle{
+#	my ($bEnable) = @_;
+#	if (defined $bEnable){
+#		$Configs{MsnEnabled} = $bEnable;
+#	}
+#	
+#	my $sOut = '';
+#	if ($Configs{MsnEnabled}){
+#		if ($Configs{MsnUsername} ne ''){
+#			if ($Configs{Debug}){ logDebug("\nEnabled MSN: $Configs{MsnUsername}\n"); }
+#			
+#			UI_updateStatus("Connecting to MSN...\nWindow may freeze for a few seconds!");
+#			
+#			if (defined $oMSN){
+#				# connect to the server
+#				$oMSN->connect();
+#				
+#			}
+#			else{
+#				msn_init();
+#			}
+#			
+#			
+#			$sOut = '-- MSN Connecting';
+#		}
+#		else{
+#			$sOut = '-- ERROR: MSN not configured';
+#			$Configs{MsnEnabled} = 0;
+#		}
+#	}
+#	else{
+#		if ($Configs{Debug} > 0){ logDebug("\nDisabled MSN\n"); }
+#		if (defined $oMSN){
+#			# connect to the server
+#			$oMSN->disconnect();
+#		}
+#		UI_updateStatus();
+#		$sOut = '-- MSN Disconnected';
+#	}
+#	return $sOut;
+#}
+#
+#
+#
+#sub msn_io{
+#	if ($Configs{MsnEnabled} && defined $oMSN){
+#		
+#		foreach my $thisSession (@aSessions){
+#			if ($thisSession->{'status'} && $thisSession->{'type'} eq 'MSN'){
+#				if ($thisSession->{'direction'} == 0){
+#					if (length($thisSession->{OUT}) > 0){
+#						
+#						my $sMsg = '';
+#						# Decently cut long messages by lines
+#						if (length($thisSession->{OUT}) < 1400 || index($thisSession->{OUT}, $lf) < 0){
+#							$sMsg = $thisSession->{OUT};
+#							$thisSession->{OUT} = '';
+#						}
+#						else{
+#							# Get the initial line
+#							my $nPos = index($thisSession->{OUT}, $lf);
+#							$sMsg .= substr($thisSession->{OUT}, 0, $nPos + 1, '');
+#							
+#							$nPos = index($thisSession->{OUT}, $lf);
+#							while(length($thisSession->{OUT}) > 0 && $nPos >= 0 && (length($sMsg) + $nPos) < 1300){
+#								# Add as many lines as possible before reaching the limit or reaching the last line
+#								$sMsg .= substr($thisSession->{OUT}, 0, $nPos + 1, '');
+#								$nPos  = index($thisSession->{OUT}, $lf);
+#							}
+#							if (length($thisSession->{OUT}) > 0 && $nPos < 0){
+#								# If we still have a last line and we can add it, then do it
+#								if ((length($sMsg) + length($thisSession->{OUT})) < 1300){
+#									$sMsg .= $thisSession->{OUT};
+#									$thisSession->{OUT} = '';
+#								}
+#							}
+#						}
+#						
+#						chomp($sMsg);
+#						
+#						$oMSN->call($thisSession->{'address'}, $sMsg, 'Effect' => '', 'Color' => '000000', 'Font' => 'Courier');
+#						
+#						
+#						if ($thisSession->{input_type} eq 'OUT-EMPTY' && length($thisSession->{OUT}) == 0){
+#							# Detect and execute commands once the OUT buffer is empty
+#							process_line($thisSession->{id}, '');
+#						}
+#
+#						
+#					}
+#					elsif ($thisSession->{'disconnect'} > 0){
+#						$thisSession->{'status'} = 0;
+#					}
+#				}
+#			}
+#		}
+#		
+#		$oMSN->do_one_loop();
+#	}
+#
+#
+#	return 1;
+#}
+#
+#sub msn_statusConnected{
+#	my $self = shift;
+#
+#	if ($Configs{Debug} > 0){ logDebug("\nMSN Connected as $Configs{MsnUsername}\n" ); }
+#
+#	$MsnConnected = 1;
+#
+#	UI_updateStatus();
+#	message_send('SYS', $MsnConnectBy, "-- MSN Connected as $Configs{MsnUsername}");
+#	
+#	#$oMSN->{Notification}->send( 'LST', 'FL');
+#
+#	# example of a call with style and P4 name
+#	#$msn->call( $admin, "I am connected!", 'Effect' => 'BI', 'Color' => '00FF00', 'Name' => 'TTY' );
+#}
+#
+#sub msn_statusDisconnected{
+#	my $self = shift;
+#
+#	if ($Configs{Debug} > 0){ logDebug("MSN $Configs{MsnUsername} Disconnected\n" );  }
+#	
+#	$MsnConnected = 0;
+#	
+#	UI_updateStatus();
+#	message_send('SYS', $MsnConnectBy, "-- MSN $Configs{MsnUsername} Disconnected");
+#}
+#
+#sub msn_receiveMessage{
+#	my ($self, $sAddress, $sName, $sMessage, %aStyle) = @_;
+#
+#	my $sSourceEmail;
+#	#my $sSourceUser;
+#
+#	if ($sMessage eq ''){
+#		return 0;
+#	}
+#
+#	$aStyle{'Color'}  = '000000';
+#	$aStyle{'Font'}   = 'Courier';
+#	$aStyle{'Effect'} = '';
+#		
+#	my $sOut = '';
+#
+#	#$sMessage = decode("utf8", $sMessage);
+#	if ($sMessage =~ /<msnobj creator="([\w-\.]+\@[\w-\.]+)".+?>/i){
+#		$sSourceEmail  = $1;
+#		#$sSourceUser   = decode("utf16", decode_base64(chr(0xfe).chr(0xff).$2));
+#		
+#		if ($sSourceEmail ne $sAddress){
+#			$MsnContactsRedirected{$sSourceEmail} = {'Email' => $sSourceEmail, 'Redirector' => $sAddress};
+#			
+#			if ($Configs{Debug} > 1){ logDebug("\nMSN Decoded: $sSourceEmail"); }
+#		}
+#		
+#		$sMessage =~ s/<msnobj.+?>//i;
+#	}
+#
+#
+#	if ($Configs{Debug} > 0){ logDebug("\nMSN $sAddress: $sMessage"); }
+#
+#	my $idSession = session_get("address=$sAddress", 'id');
+#
+#	if (!defined $idSession){
+#		# UNAUTHENTICATED
+#		if (substr($sMessage, 0, 1) eq $Configs{EscapeChar}){
+#			# Generic commands allowed to anyone
+#			
+#			# PING		
+#			if( $sMessage =~ /^.ping$/i ){
+#				$sOut = 'PONG!';
+#			}
+#			# LOGIN
+#			elsif($sMessage =~ /^.login(\s+(\S.*))?$/i ){
+#				my $sArgs = $2;
+#				$sOut = do_login(undef, $sArgs); 
+#				
+#				if ($sOut eq 'OK'){
+#					$nSessionsCount++;
+#					
+#					my $idSession  = $NewSessionId++;
+#				
+#					$aSessions[$idSession] = {
+#						'id'          => $idSession, 
+#						'type'        => 'MSN', 
+#						'IN'          => '', 
+#						'OUT'         => '',
+#						'status'      => 1, 
+#						'direction'   => 0, 
+#						'auth'        => 0, 
+#						'user'        => '', 
+#						'target'      => 'ALL', 
+#						'source'      => 'ALL', 
+#						'remote_ip'   => '',
+#						'remote_port' => '',
+#						'prompt'      => 0,
+#						'disconnect'  => 0,
+#						'address'     => $sAddress,
+#						'COMMANDS'    => [],
+#						'command_num' => -1,
+#						'input_type'  => '', 
+#						'input_var'   => '', 
+#						'input_prompt'=> '',
+#						'echo_input'  => 1,
+#						'echo_msg'    => 0, 
+#						'command'     => '',
+#						'label'       => 1
+#					};
+#					
+#					# We call it a second time to get the correct result string in a unified way for all session types
+#					$sOut = do_login($idSession, $sArgs);
+#				}
+#				else{
+#					$aStyle{'Color'} = 'FF0000';
+#				}
+#			}
+#	
+#			# Catchall for unauthenticated sessions
+#			elsif (!defined $idSession){
+#				$aStyle{'Color'} = 'FF0000';
+#				$sOut = "-- Unauthenticated user";
+#			}
+#		}
+#		elsif(exists $MsnInboundRoute{lc($sAddress)}){
+#			for (@{$MsnInboundRoute{lc($sAddress)}}){
+#				message_send("MSN $sAddress", $_, $sMessage);
+#			}
+#		}
+#		elsif($Configs{MsnListen}){
+#			if (defined $sSourceEmail){
+#				message_send("MSN $sSourceEmail", 'IN', $sMessage);
+#			}
+#			else{
+#				message_send("MSN $sAddress", 'IN', $sMessage);
+#			}
+#			
+#		}
+#	}
+#	else{
+#		#AUTHENTICATED
+#		process_line($idSession, $sMessage);
+#	}
+#	
+#	if ($sOut ne ''){
+#		$sOut =~ tr/\r//;
+#		$self->sendMessage($sOut, %aStyle);
+#	}
+#
+#	return 1;
+#}
 
 
 #------------------------------------------------------------------------
