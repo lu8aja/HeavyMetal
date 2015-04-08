@@ -29,6 +29,7 @@
 # v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 # v3.1.004 2013-03-25 New: Support for External codes & External Custom Commands. Remote Control.
 # v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
+# v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY 
 #
 # Special thanks to Jim Haynes for his help in making HM3 run in Linux.
 # Special thanks to Steve Garrison for his help in testing HM3 in Windows.
@@ -38,8 +39,8 @@
 use strict;
 
 
-my $sGlobalVersion = "3.2.000";
-my $sGlobalRelease = '2014-10-20';
+my $sGlobalVersion = "3.2.001";
+my $sGlobalRelease = '2015-04-08';
 
 my $sAboutMessage = "Version $sGlobalVersion ($sGlobalRelease)\n\n
 HeavyMetal is a simple application to interface teletype machines to computers and the internet.
@@ -62,6 +63,7 @@ v3.1.002 2012-03-25 Added METAR HISTORIC. New: Twitter via RSS, BANNER module, C
 v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT.
 v3.1.004 2013-03-25 New: Support External codes & External Commands. Remote Control.
 v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
+v3.2.001 2015-04-08 Readded AP Today in history via custom command TODAY 
 See:
   http://albinarrate.com/heavymetal.html
   http://github.com/lu8aja/HeavyMetal";
@@ -300,7 +302,8 @@ $Configs{'Twitter.Menu.0'} = 'teletypes';
 
 $Configs{'WeatherFavorite.0'} = 'New York, NY, US';
 
-
+# AP Today in History page scrapping. As it may vary wildly over time it is added via a custom command to make it easy to patch for those already installed.
+$Configs{'CommandCustom.TODAY'} = '$EVAL DOM_process("http://hosted.ap.org/dynamic/stories/H/HISTORY?SITE=AP", ["span.entry-content"], ["title"], [], 0);';
 
 
 #- - - - - - - - - - MISC Configs - - - - - - - - - - - - - - - - - - - - -
@@ -646,10 +649,8 @@ my %aActionCommands = (
 	'FULLQUOTE' => {command => \&do_quote_full,      auth => 2, help => 'Get full stock quotes',              args => 'stock-id -or- sotck-id stock-id ...'},
 	'FULLQUOTES'=> {command => \&do_quote_full,      auth => 2, help => 'Get full stock quotes',              args => 'stock-id -or- sotck-id stock-id ...'},
 	'PORTFOLIO' => {command => \&do_quote_portfolio, auth => 2, help => 'Get quotes for a given portfolio',   args => 'No args'},
-	#'TOPNEWS'   => {command => \&do_news_topnews,    auth => 0, help => 'AP news summary',                  args => 'No args'},
 	'NEWS'      => {command => \&do_news,            auth => 1, help => 'Display news using RSS services',    args => 'LIST -or- (TITLES,SUMMARY,FULL,SEARCH) feed-or-url -or- link-id'},
 	'TWITTER'   => {command => \&do_twitter,         auth => 1, help => 'Twitter access via RSS',             args => 'twitter-account'},
-	#'HISTORY'   => {command => \&do_news_history,    auth => 2, help => 'AP Today in History',              args => 'No args'},
 	'REPEAT'    => {command => \&do_repeat,          auth => 3, help => 'Endlessly repeat command line',      args => 'No args'},
 	'SLEEP'     => {command => \&do_sleep,           auth => 3, help => 'Sleep for n seconds',                args => 'num-seconds'},
 );
@@ -1943,8 +1944,7 @@ sub initialize_menu {
 	$oTkMenues{Main}->add_cascade(-label => "Newswire", -menu => $oTkMenues{News});
 	
 	# Newswire - AP newswires
-	#$oTkMenues{News}->add_command(-label => "AP Top Stories",        -command => [\&menu_execute, $sEscape."TOPNEWS\n"]);
-	#$oTkMenues{News}->add_command(-label => "AP Today in History",   -command => [\&menu_execute, $sEscape."HISTORY\n"]);
+	$oTkMenues{News}->add_command(-label => "AP Today in History",    -command => [\&menu_execute, $sEscape."TODAY\n"]);
 	$oTkMenues{News}->add_command(-label => "Historical Records",     -command => [\&menu_execute, $sEscape."NEWS SUMMARY HISTORY\n"]);
 	# Newswire - Stock quotes
 	$oTkMenues{News}->add_separator();
@@ -8569,109 +8569,6 @@ sub do_news_list{
 	
 	return $sOut;
 }
-
-sub do_news_topnews {
-	my ($idSession, $sArgs) = @_;
-	
-	my $sCmd = 'TOPNEWS';
-	command_start($idSession, $sCmd, 'AP: TOP NEWS');
-	
-	# Make sure the OUT buffer is empty before proceeding
-	my $bReady = command_input($idSession, 'ready', 'OUT-EMPTY', '', '', "-- Loading...\n\n", $sCmd);
-	if ($bReady eq ''){ return ('', 1); }
-
-	my $sOut = '';
-	my $sUrl = "http://hosted.ap.org/dynamic/fronts/HOME?SITE=MELEE&SECTION=HOME";
-	
-	my $sContents = HTTP_get($sUrl);
-	
-	foreach my $sLine(split(/\n/, $sContents)) {
-		if ($sLine =~ /class="topheadline"/){
-			$sLine = clean_html($sLine);
-			if (length($sLine) > 0){
-				$sOut .= "\n--- ".$sLine . $lf;
-			}
-		}
-		elsif ($sLine =~ /class="topheadlinebody"/){
-			$sLine = clean_html($sLine);
-			if (length($sLine) > 0){
-				$sOut .= wrap("", "", $sLine). $lf;
-			}
-		}
-	}
-	
-	if ($sOut eq ''){
-		$sOut = 'Sorry, news are unavailable now';
-	}
-	else{
-		$sOut .= "\n-- End of summary --\n";
-	}
-
-	$aSessions[$idSession]->{VARS}->{'ready'} = '';
-
-	UI_updateStatus();
-	
-	command_done($idSession);
-	
-	return ($sOut, 0, 0);
-}
-
-
-sub do_news_history {
-	my ($idSession, $sArgs) = @_;
-	
-	my $sCmd = 'HISTORY';
-	command_start($idSession, $sCmd, 'AP: TODAY IN HISTORY');
-	
-	# Make sure the OUT buffer is empty before proceeding
-	my $bReady = command_input($idSession, 'ready', 'OUT-EMPTY', '', '', "-- Loading...\n\n", $sCmd);
-	if ($bReady eq ''){ return ('', 1); }
-	
-	my $sUrl = "http://news.yahoo.com/s/ap/history";
-	# "http://story.news.yahoo.com/news?tmpl=story&u=/ap/history";
-	# "http://customwire.ap.org/dynamic/stories/H/HISTORY_JAN_3?SITE=CAWOO&SECTION=HOME&TEMPLATE=DEFAULT";
-    
-	my $sOut     = '';
-
-	my $sContents = HTTP_get($sUrl);
-
-	my $bInclude = 0;	    
-	foreach my $sLine(split(/\n/, $sContents)) {
-		if ($bInclude == 0){
-			if ($sLine =~ /<div class="yn-story-content">/i){
-				$bInclude = 1;
-			}
-		}
-		elsif ($bInclude == 1){
-			if ($sLine =~ /Today.s Birthdays/i){
-				$bInclude = 2;
-				last;
-			}
-			else{
-				$sLine = clean_html($sLine);
-				if (length($sLine) > 0){
-					$sOut .= $sLine . $lf;
-				}
-			}
-		}
-	}
-	
-	if ($sOut eq ''){
-		$sOut = 'Sorry, news are unavailable now';
-	}
-	else{
-		$sOut .= "-- End of summary --\n";
-	}
-
-	UI_updateStatus();
-	
-	$aSessions[$idSession]->{VARS}->{'ready'} = '';
-	
-	command_done($idSession);
-	
-	return ($sOut, 0, 0);
-}
-
 
 
 
