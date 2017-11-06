@@ -173,7 +173,6 @@ $Configs{Debug}           = 0;
 $Configs{DebugFile}       = 'debug/debug-$DATETIME.log';
 $Configs{DebugShowErrors} = 0;
 $Configs{SerialSetserial} = 1;
-$Configs{SerialBufferSize}= 1;
 $Configs{SerialTimeOn}    = 3;
 $Configs{SerialTimeOff}   = 120;
 $Configs{UnitTemp}        = 'Celsius';
@@ -457,26 +456,27 @@ $Configs{'TTY.2.Address'} = $aPORTS{ $Configs{'TTY.2.Port'} }->{address};
 
 # Note: Divisors are only needed for low baud rates.
 my %aBaudRates = (
-	'BAUD45'    => {order =>  10, bauds => 45,    divisor => 2534, label => '45.5 Baud (60WPM)'              , label_short => '45.5 Bb'},
-	'BAUD51A'   => {order =>  20, bauds => 51,    divisor => 2235, label => '51 Baud (60WPM for 6-bit + 1.5 stop)',    label_short => '60WPM'},
-	'BAUD51B'   => {order =>  30, bauds => 51,    divisor => 2111, label => '51 Baud (60WPM for 6-bit + 2 stop)',      label_short => '60WPM'},
-	'BAUD51C'   => {order =>  40, bauds => 51,    divisor => 2180, label => '51 Baud (60WPM for 6-bit + 2 stop slow)', label_short => '60WPM'},
-	'BAUD50'    => {order =>  50, bauds => 50,    divisor => 2304, label => '50 Baud (66WPM)'                , label_short => '50 Bb'},
-	'BAUD56'    => {order =>  60, bauds => 56,    divisor => 2057, label => '56 Baud (75WPM)'                , label_short => '75WPM'},
-	'BAUD66'    => {order =>  70, bauds => 66,    divisor => 1697, label => '74 Baud (100WPM)'               , label_short => '100WPM'},
-	'WPM100'    => {order =>  80, bauds => 66,    divisor => 1555, label => '66 Baud'                        , label_short => '66 Bb'}, # 74 baud ?
-	'BAUD110'   => {order =>  90, bauds => 110,   divisor => 1047, label => '110 Baud'                       , label_short => '110 Bb'},
-	'BAUD150'   => {order => 100, bauds => 150,   divisor =>  768, label => '150 Baud'                       , label_short => '150 Bb'},
-	'BAUD200'   => {order => 110, bauds => 200,   divisor =>  576, label => '200 Baud'                       , label_short => '200 Bb'},
-	'BAUD300'   => {order => 120, bauds => 300,   divisor =>    0, label => '300 Baud'                       , label_short => '300'},
-	'BAUD600'   => {order => 130, bauds => 600,   divisor =>    0, label => '600 Baud (Custom USB)'          , label_short => '600'},
-	'BAUD1200'  => {order => 140, bauds => 1200,  divisor =>    0, label => '1200 Baud'                      , label_short => '1200'},
-	'BAUD2400'  => {order => 150, bauds => 2400,  divisor =>    0, label => '2400 Baud'                      , label_short => '2400'},
-	'BAUD4800'  => {order => 160, bauds => 4800,  divisor =>    0, label => '4800 Baud'                      , label_short => '4800'},
-	'BAUD9600'  => {order => 170, bauds => 9600,  divisor =>    0, label => '9600 Baud'                      , label_short => '9600'},
-	'BAUD19200' => {order => 180, bauds => 19200, divisor =>    0, label => '19200 Baud'                     , label_short => '19200'},
-	'BAUD38400' => {order => 190, bauds => 38400, divisor =>    0, label => '38400 Baud'                     , label_short => '38400'},
-	'DIVISOR'   => {order => 200, bauds => 38400, divisor =>    0, label => 'Custom Divisor'                 , label_short => 'Custom'},
+	'BAUD45'    => {order =>  10, bauds => 45,    baudsreal => 45,    divisor => 2534, label => '45.5 Baud (60WPM)'              , label_short => '45.5 Bb'},
+	'BAUD51A'   => {order =>  20, bauds => 51,    baudsreal => 51,    divisor => 2235, label => '51 Baud (60WPM for 6-bit + 1.5 stop)',    label_short => '60WPM'},
+	'BAUD51B'   => {order =>  30, bauds => 51,    baudsreal => 51,    divisor => 2111, label => '51 Baud (60WPM for 6-bit + 2 stop)',      label_short => '60WPM'},
+	'BAUD51C'   => {order =>  40, bauds => 51,    baudsreal => 51,    divisor => 2180, label => '51 Baud (60WPM for 6-bit + 2 stop slow)', label_short => '60WPM'},
+	'BAUD50'    => {order =>  50, bauds => 50,    baudsreal => 50,    divisor => 2304, label => '50 Baud (66WPM)'                , label_short => '50 Bb'},
+	'BAUD56'    => {order =>  60, bauds => 56,    baudsreal => 56,    divisor => 2057, label => '56 Baud (75WPM)'                , label_short => '75WPM'},
+	'BAUD66'    => {order =>  70, bauds => 66,    baudsreal => 66,    divisor => 1697, label => '74 Baud (100WPM)'               , label_short => '100WPM'},
+	'WPM100'    => {order =>  80, bauds => 66,    baudsreal => 66,    divisor => 1555, label => '66 Baud'                        , label_short => '66 Bb'}, # 74 baud ?
+	'BAUD110'   => {order =>  90, bauds => 110,   baudsreal => 110,   divisor => 1047, label => '110 Baud'                       , label_short => '110 Bb'},
+	'BAUD150'   => {order => 100, bauds => 150,   baudsreal => 150,   divisor =>  768, label => '150 Baud'                       , label_short => '150 Bb'},
+	'BAUD200'   => {order => 110, bauds => 200,   baudsreal => 200,   divisor =>  576, label => '200 Baud'                       , label_short => '200 Bb'},
+	'BAUD300'   => {order => 120, bauds => 300,   baudsreal => 300,   divisor =>    0, label => '300 Baud'                       , label_short => '300'},
+	'BAUD600'   => {order => 130, bauds => 600,   baudsreal => 600,   divisor =>    0, label => '600 Baud'                       , label_short => '600'},
+	'BAUD1200'  => {order => 140, bauds => 1200,  baudsreal => 1200,  divisor =>    0, label => '1200 Baud'                      , label_short => '1200'},
+	'BAUD2400'  => {order => 150, bauds => 2400,  baudsreal => 2400,  divisor =>    0, label => '2400 Baud'                      , label_short => '2400'},
+	'BAUD4800'  => {order => 160, bauds => 4800,  baudsreal => 4800,  divisor =>    0, label => '4800 Baud'                      , label_short => '4800'},
+	'BAUD9600'  => {order => 170, bauds => 9600,  baudsreal => 9600,  divisor =>    0, label => '9600 Baud'                      , label_short => '9600'},
+	'BAUD19200' => {order => 180, bauds => 19200, baudsreal => 19200, divisor =>    0, label => '19200 Baud'                     , label_short => '19200'},
+	'BAUD38400' => {order => 190, bauds => 38400, baudsreal => 38400, divisor =>    0, label => '38400 Baud'                     , label_short => '38400'},
+	'USB600'    => {order => 195, bauds => 600,   baudsreal => 50,    divisor =>    0, label => 'Custom USB (600bd override)'    , label_short => 'USB'},
+	'DIVISOR'   => {order => 200, bauds => 38400, baudsreal => 50,    divisor =>    0, label => 'Custom Divisor'                 , label_short => 'Custom'}
 );
 
 my %aDataBits = (
@@ -1753,6 +1753,7 @@ sub session_new_tty{
 		'RAW_OUT'     => '',
 		'id'          => $idSession,
 		'status'      => 1,
+		'charspeed'   => 7 / 50,
 		'direction'   => $Configs{"TTY.$idTTY.Direction"},
 		'auth'        => $Configs{"TTY.$idTTY.Auth"},
 		'user'        => $Configs{"TTY.$idTTY.Name"},
@@ -1785,6 +1786,7 @@ sub session_new_tty{
 		'time_start'  => time(),
 		'VARS'        => {}
 	};
+
 	if ($Configs{Debug}){ logDebug("\nNew session for TTY: $idSession\n");}
 
 	serial_init($idSession);
@@ -2726,7 +2728,6 @@ sub initialize_tab_ports{
 
 	UI_newRow();
 	UI_addControl("RunInProtect", 'entry', 'Run-in Protect in seconds', {-width => 5});
-	UI_addControl('SerialBufferSize','entry', 'Serial output buffer size', {-width => 5});
 	#UI_addControl('', 'label', '', {-text => 'Time in seconds that TTY must be idle before sending output'}, 2);
 
 	#$oTkMenues{Configs}->add_checkbutton(-label => "X10 Auto Mode",           -variable => \$Configs{X10Auto});
@@ -3595,12 +3596,12 @@ sub UI_updateStatus {
 		if ($aSessions[1]->{status}){
 			$nBytes       = bytes_pending(1);
 			$nBytesTotal += $nBytes;
-			$sText       .= "\n TTY1 = " . $nBytes;
+			$sText       .= sprintf("\n TTY1 = %d (%0ds)", $nBytes, $nBytes * $aSessions[1]->{charspeed});
 		}
 		if ($aSessions[2]->{status}){
 			$nBytes       = bytes_pending(2);
 			$nBytesTotal += $nBytes;
-			$sText       .= "/ TTY2 = " . $nBytes;
+			$sText       .= sprintf(" / TTY2 = %d (%0ds)", $nBytes, $nBytes * $aSessions[2]->{charspeed});
 		}
 
 		if ($nBytesTotal > $nGlobalPendingBytes){
@@ -4242,11 +4243,10 @@ sub process_tty_out_rawout{
 # RAW-OUT -> SERIAL
 sub process_tty_rawout_serial{
 	my ($idSession, $res) = @_;
-	my $c;
-	my $o;
-	my $d;
-	my $rCode;
-	my $rShifts;
+	my $c;       # Character
+	my $o;       # Original
+	my $rCode;   # Ref to Code definitions
+	my $rShifts; # Ref to current shifts within code definitions
 
 	my $thisSession = $aSessions[$idSession];
 
@@ -4256,6 +4256,11 @@ sub process_tty_rawout_serial{
 			# Detect and execute commands once the OUT buffer is empty
 			process_line($idSession, '');
 		}
+		return $res;
+	}
+
+	# Port is still busy
+	if (!serial_done($thisSession->{PORT})){
 		return $res;
 	}
 
@@ -4292,191 +4297,125 @@ sub process_tty_rawout_serial{
 		$thisSession->{runin_count} = length($thisSession->{RAW_OUT});
 	}
 
-	# Loop and output characters
-	#my $sOutputBuffer = '';
-	my $nOutputCount = 0;
-	while (length($thisSession->{RAW_OUT}) > 0){
-		$c = substr($thisSession->{RAW_OUT} , 0 , 1, '');
-		$o = $c;
+	# Extract the character from the buffer
+	$c = substr($thisSession->{RAW_OUT} , 0 , 1, '');
+	$o = $c;
 
-		if ($thisSession->{runin_count} > 0){
-			$thisSession->{runin_count}--;
-		}
+	if ($thisSession->{runin_count} > 0){
+		$thisSession->{runin_count}--;
+	}
 
-		if ($Configs{Debug} > 2){ logDebug(sprintf("\n%-8s -> %-8s %02x %-3s ", 'RAW_OUT','SERIAL', ord($c), debug_char($idSession, $c))); }
+	if ($Configs{Debug} > 2){ logDebug(sprintf("\n%-8s -> %-8s %02x %-3s ", 'RAW_OUT','SERIAL', ord($c), debug_char($idSession, $c))); }
 
-		if (!defined $c){
-			next;
-		}
+	if (!defined $c){
+		next;
+	}
 
-		# Columns tracking
-		my $nColumnBefore = $thisSession->{column};
-		if ($Configs{"TTY.$idSession.Code"} eq 'ASCII'){
+	# Columns tracking
+	my $nColumnBefore = $thisSession->{column};
+	if ($Configs{"TTY.$idSession.Code"} eq 'ASCII'){
 
-			if ($c eq $cr){
-				$thisSession->{column} = 0;
-			}
-			elsif($c ne $lf && $c ne $nul && $c ne $so && $c ne $si){
-				$thisSession->{column}++;
-			}
-		}
-		else {
-			# Obtain the shift
-			my $nShift = $c & $rCode->{mask_shift};
-			my $sShift = $rCode->{MASKS}->{$nShift};
-
-			if (($c & $rCode->{mask_shared}) > 0){
-				# It is a shared character so you can keep using current shift
-				$sShift = $thisSession->{tx_shift};
-print " SHARED Shift";
-			}
-
-			# Cleanup the shift and shared bit
-			$c = $c & $rCode->{mask_data};
-
-			# Track the column
-			if ($c eq $b_cr){
-				$thisSession->{column} = 0;
-			}
-			elsif($c ne $b_lf && $c ne $nul && $c ne $ltrs && $c ne $figs){
-				$thisSession->{column}++;
-			}
-
-			if ($thisSession->{tx_shift} ne $sShift){
-				#print " ShChg ".$thisSession->{tx_shift} .">$sShift";
-				$c = ($rCode->{ENCODE}->{"shift.$sShift"} & $rCode->{mask_data}).$c;
-				$thisSession->{tx_shift} = $sShift;
-			}
-
-		}
-
-		# Overstrike protect
-		if ($thisSession->{column} >= $Configs{"TTY.$idSession.Columns"} && $Configs{"TTY.$idSession.OverstrikeProtect"}){
-			$c .= $thisSession->{eol};
+		if ($c eq $cr){
 			$thisSession->{column} = 0;
-			if ($sCode ne 'ASCII'){
-				$thisSession->{tx_shift} = 'LTRS';
-			}
+		}
+		elsif($c ne $lf && $c ne $nul && $c ne $so && $c ne $si){
+			$thisSession->{column}++;
+		}
+	}
+	else {
+		# Obtain the shift
+		my $nShift = $c & $rCode->{mask_shift};
+		my $sShift = $rCode->{MASKS}->{$nShift};
+
+		if (($c & $rCode->{mask_shared}) > 0){
+			# It is a shared character so you can keep using current shift
+			$sShift = $thisSession->{tx_shift};
+			#print " SHARED Shift";
 		}
 
-		$thisSession->{tx_last} = time();
+		# Cleanup the shift and shared bit
+		$c = $c & $rCode->{mask_data};
 
-		# For testing we do absolutely everything just like we would do with a regular setup, and we only
-		# avoid the serial output. At that point instead we simply copy the OUTPUT into the INPUT
-		if ($Configs{LoopTest}){
-			$thisSession->{RAW_IN}.= $c;
-			# If enabled we add to the SUPPRESS buffer
+		# Track the column
+		if ($c eq $b_cr){
+			$thisSession->{column} = 0;
+		}
+		elsif($c ne $b_lf && $c ne $nul && $c ne $ltrs && $c ne $figs){
+			$thisSession->{column}++;
+		}
+
+		if ($thisSession->{tx_shift} ne $sShift){
+			#print " ShChg ".$thisSession->{tx_shift} .">$sShift";
+			$c = ($rCode->{ENCODE}->{"shift.$sShift"} & $rCode->{mask_data}).$c;
+			$thisSession->{tx_shift} = $sShift;
+		}
+
+	}
+
+	# Overstrike protect
+	if ($thisSession->{column} >= $Configs{"TTY.$idSession.Columns"} && $Configs{"TTY.$idSession.OverstrikeProtect"}){
+		$c .= $thisSession->{eol};
+		$thisSession->{column} = 0;
+		if ($sCode ne 'ASCII'){
+			$thisSession->{tx_shift} = 'LTRS';
+		}
+	}
+
+	$thisSession->{tx_last} = time();
+
+	# For testing we do absolutely everything just like we would do with a regular setup, and we only
+	# avoid the serial output. At that point instead we simply copy the OUTPUT into the INPUT
+	if ($Configs{LoopTest}){
+		$thisSession->{RAW_IN}.= $c;
+		# If enabled we add to the SUPPRESS buffer
+		if ($Configs{"TTY.$idSession.LoopSuppress"}){
+			$thisSession->{SUPPRESS} .= $c;
+		}
+
+		### This is wrong it would only work if would have ASCII here!!!
+		#if (defined $oTkControls{"TTY-$idSession-Mirror"}){
+		#	UI_mirror_display("TTY-$idSession-Mirror", $d);
+		#}
+	}
+	elsif ($thisSession->{PORT}){
+		serial_wait($thisSession->{PORT});
+
+		my $bSent = $thisSession->{PORT}->write($c);
+		if (!$bSent){
+			# Retry after 5 char times
+			if ($Configs{Debug} > 2){ logDebug(' retry'); }
+
+			Time::HiRes::usleep(5 * $thisSession->{charspeed} * 1000000);
+			$bSent = $thisSession->{PORT}->write($c);
+		}
+		if ($bSent){
+
+			# If enabled we add to the SUPRESS buffer
 			if ($Configs{"TTY.$idSession.LoopSuppress"}){
 				$thisSession->{SUPPRESS} .= $c;
+
+				if (length($thisSession->{SUPPRESS}) > 100){
+					# This is definitely too much for the supress buffer, so almost surely we don't have an echo in the loop
+					$Configs{"TTY.$idSession.LoopSuppress"} = 0;
+					$thisSession->{SUPPRESS} = '';
+					logDebug("\nWarning: Turning OFF loop supression");
+				}
 			}
 
 			### This is wrong it would only work if would have ASCII here!!!
 			#if (defined $oTkControls{"TTY-$idSession-Mirror"}){
 			#	UI_mirror_display("TTY-$idSession-Mirror", $d);
 			#}
+
 		}
-		elsif ($thisSession->{PORT}){
-			if (serial_wait($thisSession->{PORT}) && $thisSession->{PORT}->write($c)){
-
-				# If enabled we add to the SUPRESS buffer
-				if ($Configs{"TTY.$idSession.LoopSuppress"}){
-					$thisSession->{SUPPRESS} .= $c;
-
-					if (length($thisSession->{SUPPRESS}) > 100){
-						# This is definitely too much for the supress buffer, so almost surely we don't have an echo in the loop
-						$Configs{"TTY.$idSession.LoopSuppress"} = 0;
-						$thisSession->{SUPPRESS} = '';
-						logDebug("\nWarning: Turning OFF loop supression");
-					}
-				}
-
-				### This is wrong it would only work if would have ASCII here!!!
-				#if (defined $oTkControls{"TTY-$idSession-Mirror"}){
-				#	UI_mirror_display("TTY-$idSession-Mirror", $d);
-				#}
-
-			}
-			else {
-				if ($Configs{SerialBufferSize} > 1){
-					$Configs{SerialBufferSize} = 1;
-					# Note: I prepend the chunk again to avoid loosing bytes, but for sure the column will be wrong until the next CRLF
-					$thisSession->{RAW_OUT} = $o.$thisSession->{RAW_OUT};
-					$thisSession->{column}  = $nColumnBefore;
-
-					logDebug("\nWarning: Cannot write to port, lowering SerialBufferSize to 1");
-				}
-				else {
-					$thisSession->{status} = 0;
-					logDebug("\nERROR: Cannot write to port, dropping character ".ord($c));
-					if (defined $oTkControls{"TTY-$idSession-Status"}){
-						$oTkControls{"TTY-$idSession-Status"}->{control}->configure(-text => "ERROR: Cannot write to port, port disabled");
-					}
-				}
+		else {
+			$thisSession->{status} = 0;
+			logDebug("\nERROR: Cannot write to port, dropping character ".ord($c));
+			if (defined $oTkControls{"TTY-$idSession-Status"}){
+				$oTkControls{"TTY-$idSession-Status"}->{control}->configure(-text => "ERROR: Cannot write to port, port disabled");
 			}
 		}
-		$nOutputCount++;
-
-		if (length($nOutputCount) >= $Configs{SerialBufferSize}){
-			last;
-		}
-	} # while RAW_OUT
-
-	# Output the tiny buffer
-	#			if ($sOutputBuffer){
-		#				$thisSession->{tx_last} = time();
-		#
-		#				# For testing we do absolutely everything just like we would do with a regular setup, and we only
-		#				# avoid the serial output. At that point instead we simply copy the OUTPUT into the INPUT
-		#				if ($Configs{LoopTest}){
-		#					$thisSession->{RAW_IN}.= $sOutputBuffer;
-		#					# If enabled we add to the SUPPRESS buffer
-		#					if ($Configs{"TTY.$idSession.LoopSuppress"}){
-		#						$thisSession->{SUPPRESS} .= $sOutputBuffer;
-		#					}
-		#
-		#					### This is wrong it would only work if would have ASCII here!!!
-		#					#if (defined $oTkControls{"TTY-$idSession-Mirror"}){
-		#					#	UI_mirror_display("TTY-$idSession-Mirror", $d);
-		#					#}
-		#				}
-		#				elsif($thisSession->{PORT}){
-		#					if (serial_wait($thisSession->{PORT}) && $thisSession->{PORT}->write( $sOutputBuffer)){
-		#
-		#						# If enabled we add to the SUPRESS buffer
-		#						if ($Configs{"TTY.$idSession.LoopSuppress"}){
-		#							$thisSession->{SUPPRESS} .= $sOutputBuffer;
-		#
-		#							if (length($thisSession->{SUPPRESS}) > 500){
-		#								# This is definitely too much for the supress buffer, so almost surely we don't have an echo in the loop
-		#								$Configs{"TTY.$idSession.LoopSuppress"} = 0;
-		#								$thisSession->{SUPPRESS} = '';
-		#								logDebug("\nWarning: Turning OFF loop supression");
-		#							}
-		#						}
-		#
-		#						### This is wrong it would only work if would have ASCII here!!!
-		#						#if (defined $oTkControls{"TTY-$idSession-Mirror"}){
-		#						#	UI_mirror_display("TTY-$idSession-Mirror", $d);
-		#						#}
-		#
-		#					}
-		#					else {
-		#						if ($Configs{SerialBufferSize} > 1){
-		#							$Configs{SerialBufferSize} = 1;
-		#							# Note: I prepend the chunk again to avoid loosing bytes, but for sure the column will be wrong until the next CRLF
-		#							$thisSession->{RAW_OUT} = $sOutputBuffer.$thisSession->{RAW_OUT};
-		#							logDebug("\nWarning: Cannot write to port, lowering SerialBufferSize to 1");
-		#						}
-		#						else {
-		#							$thisSession->{status} = 0;
-		#							logDebug("\nERROR: Cannot write to port, dropping character ".ord($c));
-		#							if (defined $oTkControls{"TTY-$idSession-Status"}){
-		#								$oTkControls{"TTY-$idSession-Status"}->{control}->configure(-text => "ERROR: Cannot write to port, port disabled");
-		#							}
-		#						}
-		#					}
-		#				}
-	#			}
+	}
 
 	return $res;
 }
@@ -5018,7 +4957,11 @@ sub serial_init{
 
 	my $thisSession = $aSessions[$idSession];
 
-	my $sPort       = $Configs{"TTY.$idSession.Port"};
+	# Note: There is an issue, mentioned here:
+	# https://stackoverflow.com/questions/19124643/win32serialport-constructor-goes-buffer-overflow-when-reference-variable-is-gi
+	# https://stackoverflow.com/questions/19124643/win32serialport-constructor-goes-buffer-overflow-when-reference-variable-is-gi
+	my $sPort       = substr($Configs{"TTY.$idSession.Port"}, 0);
+
 	my $sBaudRate   = $Configs{"TTY.$idSession.BaudRate"};
 	my $nDivisor    = $Configs{"TTY.$idSession.Divisor"};
 	my $nAddress    = $Configs{"TTY.$idSession.Address"};
@@ -5071,7 +5014,7 @@ sub serial_init{
 		local_error($sError);
 	}
 	else {
-		if ($Configs{Debug}) { logDebug("\nSerial $idSession Opening port $sPort\n");}
+		if ($Configs{Debug}) { logDebug("\nSerial $idSession Opening port '$sPort'\n");}
 
 		if (!$nAddress && $Configs{SerialSetserial} && $bWindows) {
 			$sWarning = "Session $idSession: setdiv cannot run, verify port address";
@@ -5079,7 +5022,7 @@ sub serial_init{
 		}
 
 		if ($bWindows) {
-			$thisSession->{PORT} = Win32::SerialPort->new($sPort,1);
+			$thisSession->{PORT} = Win32::SerialPort->new($sPort, 1);
 		}
 		else {
 			$thisSession->{PORT} = Device::SerialPort->new($sPort);
@@ -5107,6 +5050,11 @@ sub serial_init{
 			if (!$bWindows && $nStopBits == 1.5){
 				$nStopBitsReal = 2;
 			}
+
+			# Character speed, used for UI calculations
+			my $nTotalBits = 1 + $nDataBits + $nStopBitsReal + ($sParity eq 'none' ? 0 : 1);
+			$thisSession->{charspeed} = $nTotalBits / $aBaudRates{$sBaudRate}->{baudsreal};
+
 
 			# to avoid some conflicts, first reset port to innocuous state
 			$thisSession->{PORT}->databits(8);
@@ -5244,6 +5192,18 @@ sub serial_close{
 	$thisSession->{status}  = 0;
 
 	return 1;
+}
+
+sub serial_done{
+	my ($rPort) = @_;
+
+	if ($bWindows) {
+		my ($bDone, $nCount) = $rPort->write_done(0);
+		return $bDone;
+	}
+	else {
+		return $rPort->write_drain() ? 1 : 0;
+	}
 }
 
 sub serial_wait{
@@ -6492,7 +6452,7 @@ sub do_weather_metar{
 
 		# Download the list
 		if (!(-e $sTarget)){
-			$sContents = HTTP_get('http://weather.noaa.gov/data/nsd_cccc.txt');
+			$sContents = HTTP_get('http://tgftp.nws.noaa.gov/data/nsd_cccc.txt');
 			if ($sContents){
 				open(my $rFile, '>', $sTarget);
 				print $rFile $sContents;
