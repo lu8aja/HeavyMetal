@@ -2720,16 +2720,13 @@ sub initialize_tab_ports{
 
 	UI_setParent($oTkFramePortsCommon);
 
-	UI_addControl('SerialSetserial','checkbutton', '', {-variable => \$Configs{SerialSetserial}, -text => 'Use setserial (linux) or setdiv (Win)'}, 2);
-	UI_addControl('LoopTest',       'checkbutton', '', {-variable => \$Configs{LoopTest},        -text => 'Local loop test (bypass port)'}, 2);
-	UI_newRow();
 	UI_addControl('EscapeEnabled',  'checkbutton', '', {-variable => \$Configs{EscapeEnabled},   -text => "Enable '$Configs{EscapeChar}' escapes"}, 2);
-	UI_addControl('CopyHostOutput', 'combobox', "Copy commands' output from HOST to TTY", {-values => \%aOutputTargets,  -width => 8})->g_bind('<FocusOut>' => [\&UI_changedControl, 'CopyHostOutput']);
-
-	UI_newRow();
 	UI_addControl("RunInProtect", 'entry', 'Run-in Protect in seconds', {-width => 5});
+	UI_newRow();
+	UI_addControl('LoopTest',       'checkbutton', '', {-variable => \$Configs{LoopTest},        -text => 'Local loop test (bypass port)'}, 2);
+	UI_addControl('CopyHostOutput', 'combobox', "Copy commands' output from HOST to TTY", {-values => \%aOutputTargets,  -width => 8})->g_bind('<FocusOut>' => [\&UI_changedControl, 'CopyHostOutput']);
+	#UI_newRow();
 	#UI_addControl('', 'label', '', {-text => 'Time in seconds that TTY must be idle before sending output'}, 2);
-
 	#$oTkMenues{Configs}->add_checkbutton(-label => "X10 Auto Mode",           -variable => \$Configs{X10Auto});
 
 	my $oTkTabsPorts = $oTkFramePorts->new_ttk__notebook;
@@ -2747,32 +2744,40 @@ sub initialize_tab_port_tty{
 
 	UI_setParent($oTkFramePortsTTY);
 
-	UI_addControl("TTY.$nTTY.Name", 'entry', 'Name', {-width => 12})->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Name"]);
-	UI_addControl("TTY-$nTTY-Status", 'label', 'Status:',      {-text => 'OFF'}, 5);
+	UI_addControl("TTY.$nTTY.Name",   'entry', 'Name', {-width => 12}, 2)->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Name"]);
+	UI_addControl("TTY-$nTTY-Status", 'label', 'Status:', {-text => 'OFF'}, 3);
 
 	UI_newRow();
-	UI_addControl("TTY.$nTTY.Port", 'combobox', 'Serial Port',{-values => \%aPORTS});
+	UI_addControl("TTY.$nTTY.Port", 'combobox', 'Serial Port', {-values => \%aPORTS});
+	UI_addControl('SerialSetserial','checkbutton', ' ', {
+		-variable => \$Configs{SerialSetserial},
+		-text => ($bWindows ? 'Use setdiv (Win)' : 'Use setserial (linux)')
+	}, 2);
+		UI_newRow();
 	UI_addControl("TTY.$nTTY.Address", 'combobox', 'Address', {-values => \%aPortAddresses, -width => 5});
 
-	UI_addControl("FramePortsTests-$nTTY", 'frame', 'Tests:', {}, 3);
+	UI_newRow();
+	UI_addControl("TTY.$nTTY.BaudRate", 'combobox', 'Baud rate', {-values => \%aBaudRates, -state => 'readonly', -width => 30}, 2);
 
 	UI_newRow();
-	UI_addControl("TTY.$nTTY.BaudRate", 'combobox', 'Baud rate', {-values => \%aBaudRates, -state => 'readonly', -width => 30});
 	UI_addControl("TTY.$nTTY.DataBits", 'combobox', 'Data bits', {-values => \%aDataBits,  -state => 'readonly', -width => 6});
 	UI_addControl("TTY.$nTTY.Parity",   'combobox', 'Parity',    {-values => \%aParity,    -state => 'readonly', -width => 6});
 	UI_addControl("TTY.$nTTY.StopBits", 'combobox', 'Stop bits', {-values => \%aStopBits,  -state => 'readonly', -width => 6});
 
-	UI_newRow(1);
-	UI_addControl("FramePortsMisc-$nTTY", 'frame', '', {}, 7);
-
-
+	UI_newRow();
+	UI_addControl("FramePortsTests-$nTTY", 'frame', 'Tests:', {}, 5);
 
 	UI_newRow();
-	UI_addControl("TTY.$nTTY.Code", 'combobox', 'Code',       {-values => \%CODES, -state => 'readonly', -width => 36}, {-sticky => 'nw'});
-	UI_addControl("FramePortBaudot-$nTTY",    'labelframe', '', {-text => 'Baudot Codes'}, {-sticky => 'n', -columnspan => 6});
+	UI_addControl("FramePortsMisc-$nTTY", 'frame', '', {}, 5);
 
 	UI_newRow();
-	UI_addControl("FramePortSession-$nTTY",    'labelframe', '', {-text => 'Session configs'}, {-sticky => 'n', -columnspan => 8});
+	UI_addControl("TTY.$nTTY.Code", 'combobox', 'Code',       {-values => \%CODES, -state => 'readonly', -width => 36}, {-sticky => 'nw', -columnspan => 2});
+
+	UI_newRow();
+	UI_addControl("FramePortBaudot-$nTTY",    'labelframe', '', {-text => 'Baudot Codes'}, {-sticky => 'n', -columnspan => 3});
+
+	UI_newRow();
+	UI_addControl("FramePortSession-$nTTY",    'labelframe', '', {-text => 'Session configs'}, {-sticky => 'n', -columnspan => 5});
 
 	# Inner frames now...
 	UI_setParent("FramePortBaudot-$nTTY");
@@ -2799,8 +2804,6 @@ sub initialize_tab_port_tty{
 	UI_addControl("TTY.$nTTY.TranslateLF", 'checkbutton', '', {-variable => \$Configs{"TTY.$nTTY.TranslateLF"}, -text => 'Translate input LF to CRLF', -onvalue => 1, -offvalue => 0});
 	UI_addControl("TTY.$nTTY.OverstrikeProtect", 'checkbutton', '', {-variable => \$Configs{"TTY.$nTTY.OverstrikeProtect"}, -text => 'Overstrike protect',   -onvalue => 1, -offvalue => 0}, 2);
 	UI_addControl("TTY.$nTTY.LineDTR",     'combobox', 'Line DTR', {-values => \%GlobalSeriaLinesStatus, -state => 'readonly', -width => 16});
-
-
 
 	UI_setParent("FramePortSession-$nTTY", 1);
 	UI_addControl("TTY.$nTTY.Label",      'checkbutton', '', {-variable => \$Configs{"TTY.$nTTY.Label"}, -text => 'Show source label',   -onvalue => 1, -offvalue => 0}, 3)->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Label"]);
@@ -3092,6 +3095,7 @@ sub UI_changedControl{
 
 sub UI_addControl{
 	my ($sName, $sType, $sLabel, $oOptions, $oGrid) = @_;
+	# Note: If oGrid is a number, then it is assumed to be -columnspan
 
 	if(!defined $UI_TkParent){
 		return;
@@ -3812,45 +3816,43 @@ sub process_tty_rawin_in{
 		if (length($thisSession->{'SUPPRESS'}) > 0 && $c eq substr($thisSession->{'SUPPRESS'}, 0, 1)) {
 			if ($Configs{Debug} > 2){ logDebug('Supp '); }
 			substr($thisSession->{'SUPPRESS'}, 0, 1, '');
-#			# Experimental, Mirror
-#			if ($oTkControls{'TTY-1-Mirror'} && $Configs{"TTY.$idSession.LoopSuppress"}){
-#				if ($sCode eq "ASCII" ) {
-#					$d = $c;
-#				}
-#				else {
-#					# TRANSCODE BAUDOT->ASCII
-#					if ($c eq $ltrs || $c eq $figs) {
-#						$thisSession->{rx_shift} = $c;
-#					}
-#					elsif ($c eq $space && $Configs{"TTY.$idSession.UnshiftOnSpace"}){
-#						$thisSession->{rx_shift} = $ltrs;
-#					}
-#					if ($thisSession->{rx_shift} eq $ltrs) {
-#						$d = $CODES{$sCode}->{'FROM-LTRS'}->{$c};
-#					}
-#					else {
-#						$d = $CODES{$sCode}->{'FROM-FIGS'}->{$c};
-#					}
-#					if (!defined($d)) {
-#						$d = $host_no_match_char;
-#					}
-#
-#				}
-#
-#				# Translate Line endings
-#				if ($d eq $lf && $Configs{"TTY.$idSession.TranslateLF"}){
-#					$d = $EOL;
-#				}
-#				elsif ($d eq $cr && $Configs{"TTY.$idSession.TranslateCR"}) {
-#					$d = $EOL;
-#				}
-#
-#				if ($d){
-#					UI_mirror_display('TTY-1-Mirror', $d);
-#				}
-#			}
-
-
+	#			# Experimental, Mirror
+	#			if ($oTkControls{'TTY-1-Mirror'} && $Configs{"TTY.$idSession.LoopSuppress"}){
+	#				if ($sCode eq "ASCII" ) {
+	#					$d = $c;
+	#				}
+	#				else {
+	#					# TRANSCODE BAUDOT->ASCII
+	#					if ($c eq $ltrs || $c eq $figs) {
+	#						$thisSession->{rx_shift} = $c;
+	#					}
+	#					elsif ($c eq $space && $Configs{"TTY.$idSession.UnshiftOnSpace"}){
+	#						$thisSession->{rx_shift} = $ltrs;
+	#					}
+	#					if ($thisSession->{rx_shift} eq $ltrs) {
+	#						$d = $CODES{$sCode}->{'FROM-LTRS'}->{$c};
+	#					}
+	#					else {
+	#						$d = $CODES{$sCode}->{'FROM-FIGS'}->{$c};
+	#					}
+	#					if (!defined($d)) {
+	#						$d = $host_no_match_char;
+	#					}
+	#
+	#				}
+	#
+	#				# Translate Line endings
+	#				if ($d eq $lf && $Configs{"TTY.$idSession.TranslateLF"}){
+	#					$d = $EOL;
+	#				}
+	#				elsif ($d eq $cr && $Configs{"TTY.$idSession.TranslateCR"}) {
+	#					$d = $EOL;
+	#				}
+	#
+	#				if ($d){
+	#					UI_mirror_display('TTY-1-Mirror', $d);
+	#				}
+	#			}
 		}
 		else {
 			$thisSession->{rx_last} = time();
