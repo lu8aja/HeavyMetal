@@ -415,26 +415,26 @@ sub FM_fAbortOnError		{ 0x4000 }
 sub FM_fDummy2			{ 0xffff8000 }
 
 ## COMSTAT bit mask
-sub BM_fCtsHold		{ 0x1 }   
-sub BM_fDsrHold		{ 0x2 }   
-sub BM_fRlsdHold	{ 0x4 }  
-sub BM_fXoffHold	{ 0x8 }  
-sub BM_fXoffSent	{ 0x10 }  
-sub BM_fEof		{ 0x20 }       
-sub BM_fTxim		{ 0x40 }      
-sub BM_AllBits		{ 0x7f }      
+sub BM_fCtsHold		{ 0x1 }
+sub BM_fDsrHold		{ 0x2 }
+sub BM_fRlsdHold	{ 0x4 }
+sub BM_fXoffHold	{ 0x8 }
+sub BM_fXoffSent	{ 0x10 }
+sub BM_fEof		{ 0x20 }
+sub BM_fTxim		{ 0x40 }
+sub BM_AllBits		{ 0x7f }
 
 ## PurgeComm bit mask
-sub PURGE_TXABORT	{ 0x1 }   
-sub PURGE_RXABORT	{ 0x2 }   
-sub PURGE_TXCLEAR	{ 0x4 }  
-sub PURGE_RXCLEAR	{ 0x8 }  
+sub PURGE_TXABORT	{ 0x1 }
+sub PURGE_RXABORT	{ 0x2 }
+sub PURGE_TXCLEAR	{ 0x4 }
+sub PURGE_RXCLEAR	{ 0x8 }
 
 ## GetCommModemStatus bit mask
-sub MS_CTS_ON		{ 0x10 }   
-sub MS_DSR_ON		{ 0x20 }   
-sub MS_RING_ON		{ 0x40 }  
-sub MS_RLSD_ON		{ 0x80 }  
+sub MS_CTS_ON		{ 0x10 }
+sub MS_DSR_ON		{ 0x20 }
+sub MS_RING_ON		{ 0x40 }
+sub MS_RLSD_ON		{ 0x80 }
 
 ## EscapeCommFunction operations
 sub SETXOFF		{ 0x1 }
@@ -601,7 +601,7 @@ sub new {
 
     $self->{"_HANDLE"}=CreateFile("$self->{NAME}",
 				  0xc0000000,
-				  0,	
+				  0,
 				  $null,
 				  3,
 				  0x40000000,
@@ -619,7 +619,7 @@ sub new {
         return 0 if ($quiet);
 	return if (nocarp);
         OS_Error;
-        carp "can't open device: $self->{NAME}\n"; 
+        carp "can't open device: $self->{NAME}\n";
         return;
     }
 
@@ -661,7 +661,7 @@ sub new {
      $CP_ProvChar_start,
      $CP_Filler)= unpack($CP_format1, $CommProperties);
 
-    if (($CP_Length > 64) and ($self->{"_TYPE"} == PST_RS232)) {
+    if (($CP_Length > 66) and ($self->{"_TYPE"} == PST_RS232)) {
         carp "invalid COMMPROP block length= $CP_Length";
         undef $self;
         return;
@@ -709,7 +709,7 @@ sub new {
          $MC_MaxDTE,
          $MC_MaxDCE,
          $MC_Filler)= unpack($CP_format6, $CommProperties);
-    
+
         if ($Babble) {
     	    printf "\nMODEMDEVCAPS:\n";
             printf "\$MC_ActualSize= %d\n", $CP_ProvChar_start;
@@ -755,7 +755,7 @@ sub new {
             printf "at least %d bytes.\n", $MC_ReqSize+60;
         }
     }
-    
+
 ##    if (1 | $Babble) {
     if ($Babble) {
         printf "\$CP_Length= %d\n", $CP_Length;
@@ -1018,7 +1018,7 @@ sub new {
           			 $zero,		# osRead_Offset,
           			 $zero,		# osRead_OffsetHigh,
 				 $self->{"_R_EVENT"});
-  
+
     $self->{"_W_OVERLAP"} = pack($OVERLAPPEDformat,
           			 $zero,		# osWrite_Internal,
           			 $zero,		# osWrite_InternalHigh,
@@ -1148,7 +1148,7 @@ sub init_done {
     return 0 unless (defined $self->{"_INIT"});
     return $self->{"_INIT"};
 }
-    
+
 
 sub update_DCB {
     my $self = shift;
@@ -1372,7 +1372,7 @@ sub initialize {
     }
     purge_all($self);
     return $fault;
-}    
+}
 
 sub is_status {
     my $self		= shift;
@@ -2545,7 +2545,7 @@ Win32API::CommPort - Raw Win32 system API calls for serial communications.
 
   $PortObj->is_read_interval(100);    # max time between read char (millisec)
   $PortObj->is_read_char_time(5);     # avg time between read char
-  $PortObj->is_read_const_time(100);  # total = (avg * bytes) + const 
+  $PortObj->is_read_const_time(100);  # total = (avg * bytes) + const
   $PortObj->is_write_char_time(5);
   $PortObj->is_write_const_time(100);
 
@@ -2834,7 +2834,7 @@ exceeds the value set by B<is_read_interval>. It does this by timestamping
 each character. It appears that at least one character must by received in
 I<every> B<read> I<call to the API> to initialize the mechanism. The timer
 is then reset by each succeeding character. If no characters are received,
-the read will block indefinitely. 
+the read will block indefinitely.
 
 Setting B<is_read_interval> to C<0xffffffff> will do a non-blocking read.
 The B<ReadFile> returns immediately whether or not any characters are
