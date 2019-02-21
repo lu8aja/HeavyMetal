@@ -645,6 +645,7 @@ my %Commands = (
 	'RYRY'      => {command => \&do_ryry,            auth => 2, help => 'Test RYRY',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
 	'R6R6'      => {command => \&do_r6r6,            auth => 2, help => 'Test R6R6',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
 	'RRRR'      => {command => \&do_rrrr,            auth => 2, help => 'Test RRRR',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
+	'UUUU'      => {command => \&do_uuuu,            auth => 2, help => 'Test UUUU',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
 	'RAW5BIT'   => {command => \&do_raw_5bit,        auth => 2, help => 'Test Raw 5 bits',                    args => 'No args'},
 	'RAW6BIT'   => {command => \&do_raw_6bit,        auth => 2, help => 'Test Raw 6 bits',                    args => 'No args'},
 	'ECHOTEST'  => {command => \&do_echotest,        auth => 3, help => 'Test for echo in TTY loop',          args => 'id-session-of-tty'},
@@ -2131,11 +2132,12 @@ sub initialize_menu {
 	# MENU: Tests
 	$oTkMenues{Tests} = $oTkMenues{Main}->new_menu();
 	$oTkMenues{Main}->add_cascade(-label => "Tests", -menu => $oTkMenues{Tests});
-	$oTkMenues{Tests}->add_command(-label => "Quick brown fox",       -command => [\&menu_execute, $sEscape."QBF\n"]);
-	$oTkMenues{Tests}->add_command(-label => "RYRY",                  -command => [\&menu_execute, $sEscape."RYRY 10\n"]);
-	$oTkMenues{Tests}->add_command(-label => "R6R6",                  -command => [\&menu_execute, $sEscape."R6R6 10\n"]);
-	$oTkMenues{Tests}->add_command(-label => "Raw 5-bit codes",       -command => [\&menu_execute, $sEscape."RAW5BIT\n"]);
-	$oTkMenues{Tests}->add_command(-label => "Raw 6-bit codes",       -command => [\&menu_execute, $sEscape."RAW6BIT\n"]);
+	$oTkMenues{Tests}->add_command(-label => "Quick brown fox",             -command => [\&menu_execute, $sEscape."QBF\n"]);
+	$oTkMenues{Tests}->add_command(-label => "RYRY (Square Wave in ITA-2)", -command => [\&menu_execute, $sEscape."RYRY 10\n"]);
+	$oTkMenues{Tests}->add_command(-label => "R6R6 (Heavy in ITA-2)",       -command => [\&menu_execute, $sEscape."R6R6 10\n"]);
+	$oTkMenues{Tests}->add_command(-label => "UUUU (Square Wave in ASCII)", -command => [\&menu_execute, $sEscape."UUUU 10\n"]);
+	$oTkMenues{Tests}->add_command(-label => "Raw 5-bit codes",             -command => [\&menu_execute, $sEscape."RAW5BIT\n"]);
+	$oTkMenues{Tests}->add_command(-label => "Raw 6-bit codes",             -command => [\&menu_execute, $sEscape."RAW6BIT\n"]);
 
 	# MENU: Cancel
 	$oTkMenues{Cancel} = $oTkMenues{Main}->new_menu();
@@ -2790,6 +2792,11 @@ sub initialize_tab_port_tty{
 	UI_setParent("FramePortsTests-$nTTY");
 	UI_addControl("ButtonPortsTestRYRY-$nTTY",    'button', '', {-text => 'RYRY',      -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}RYRY\n", 1]});
 	UI_addControl("ButtonPortsTestRYRY100-$nTTY", 'button', '', {-text => 'RYRY 100',  -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}RYRY 100\n", 1]});
+
+	UI_addControl("ButtonPortsTestUUUU-$nTTY",    'button', '', {-text => 'UUUU',      -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}UUUU\n", 1]});
+	UI_addControl("ButtonPortsTestUUUU100-$nTTY", 'button', '', {-text => 'UUUU 100',  -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}UUUU 100\n", 1]});
+
+
 	UI_addControl("ButtonPortsTestQBF-$nTTY",     'button', '', {-text => 'QBF',       -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}QBF 100\n", 1]});
 	UI_addControl("ButtonPortsTestEcho-$nTTY",    'button', '', {-text => 'Echo test', -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}ECHOTEST $nTTY\n", 1]});
 
@@ -5147,6 +5154,12 @@ sub serial_init{
 		}
 		if (defined $oTkControls{"ButtonPortsTestRYRY100-$idSession"}){
 			$oTkControls{"ButtonPortsTestRYRY100-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
+		}
+		if (defined $oTkControls{"ButtonPortsTestUUUU-$idSession"}){
+			$oTkControls{"ButtonPortsTestUUUU-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
+		}
+		if (defined $oTkControls{"ButtonPortsTestUUUU100-$idSession"}){
+			$oTkControls{"ButtonPortsTestUUUU100-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
 		}
 		if (defined $oTkControls{"ButtonPortsTestQBF-$idSession"}){
 			$oTkControls{"ButtonPortsTestQBF-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
@@ -9529,6 +9542,13 @@ sub do_rrrr {
 	return generate_test($idSession, 'RRRR', 'RRRR TEST', 'R', int($aArgs[0]), (uc($aArgs[1]) eq 'OFF' ? 0 : 1));
 }
 
+sub do_uuuu {
+	my ($idSession, $sArgs) = @_;
+	my @aArgs = split(/\s+/, $sArgs);
+
+	return generate_test($idSession, 'UUUU', 'UUUU TEST', 'U', int($aArgs[0]), (uc($aArgs[1]) eq 'OFF' ? 0 : 1));
+}
+
 sub do_raw_5bit {
 	my ($idSession, $sArgs) = @_;
 
@@ -9543,7 +9563,7 @@ sub do_raw_5bit {
 	#$sOut .= "+-------------------------------- --------------------------------+\n";
 	$sOut .= '$RAWMODEON ';
 
-# Missing $TRANSCODEOFF escape implementation
+  # Missing $TRANSCODEOFF escape implementation
 	for (my $i = 0; $i < 32; $i++){
 		$sOut .= chr($i);
 	}

@@ -1,0 +1,67 @@
+CP210x Baud Rate Configuration Utility v2.2b Release Notes
+Copyright (C) 2010 Silicon Laboratories, Inc.
+
+This release contains the following components:
+
+        * CP210xBaudRateAliasConfig.exe (2.2)
+        * CP210xBaudRateAliasConfig_SRC.zip
+        * CP210xManufacturing.dll (4.1)
+        * CP210xManufacturing.lib
+        * CP210xManufacturingDLL.h
+        * ReleaseNotes.txt (this file)
+
+KNOWN ISSUES AND LIMITATIONS
+----------------------------
+
+	1.) Only CP2101, CP2102, CP2103 and CP2104 devices are supported by 
+	    this utility. 
+
+	2.) CP210xManufacturing.dll must be in the same directory as
+	    CP210xBaudRateAliasConfig.exe.
+
+Release Dates
+-------------
+
+	CP210x Baud Rate Configuration Utility v2.2c - July 26, 2010
+
+
+REVISION HISTORY
+-----------------
+
+version 2.2c
+	The CP210xManufacturing.DLL has been updated to version 4.1
+
+version 2.2b
+	The CP210xManufacturing.DLL has been updated to version 3.5 for
+	CP2104 support
+
+version 2.2a
+	The CP210xManufacturing.DLL has been updated to version 3.4
+
+version 2.2
+	Fixed possible divide by zero errors in baud rate calculation
+	The CP210xManufacturing.DLL has been updated to version 3.3
+
+version 2.1
+	The CP210xManufacturing.DLL has been updated to version 3.0 to add support
+	for the 5.x driver.
+
+version 2.0
+	Changed GetNumDevices to not return an error when there are 0 devices connected.
+	Fixed the "Locked Byte always 1" bug.
+
+version 1.2
+	CP210xManufacturing DLL CP210x_GetProductString, CP210x_SetProductString,
+	CP210x_GetSerialNumber and CP210x_SetSerialNumber updated so that the UNICODE
+	options work according to documentation, length is returned as number of characters
+	without the NULL character.
+
+	CP210xManufacturing DLL PORT_CONFIG structure updated according to documentation.
+
+version 1.1
+	The CP210x Manufacturing DLL has been updated. See AN144 and 
+	AN144SW for further details.
+
+Version 1.0
+	Initial Release
+
