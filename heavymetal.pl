@@ -3,7 +3,7 @@
 
 ##############################################################################
 #
-# HeavyMetal v3.1.004
+# HeavyMetal v4.0.001
 #
 # Teletype control program.
 #
@@ -31,6 +31,7 @@
 # v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
 # v3.2.001 2015-04-08 Readded AP Today in history via custom command $TODAY.
 #                     DEPRECATED: Twitter (RSS API), MSN, Google Weather
+# v4.0.001 2019-02-16 Resumed development and fixes, changed version for a clear restart.
 #
 # Special thanks to Jim Haynes for his help in making HM3 run in Linux.
 # Special thanks to Steve Garrison for his help in testing HM3 in Windows.
@@ -47,8 +48,8 @@ my $SetConsoleOutputCP= new Win32::API( 'kernel32.dll', 'SetConsoleOutputCP', 'N
 $SetConsoleOutputCP->Call(65001);
 #end
 
-my $sGlobalVersion = "3.2.001";
-my $sGlobalRelease = '2015-04-08';
+my $sGlobalVersion = "4.0.001";
+my $sGlobalRelease = '2019-02-16';
 
 my $sAboutMessage = "Version $sGlobalVersion ($sGlobalRelease)\n\n
 HeavyMetal is a simple application to interface teletype machines to computers and the internet.
@@ -72,6 +73,8 @@ v3.1.003 2012-04-08 Bugfixes: TTY2. Dropped characters. Unidecode. HMNET CONNECT
 v3.1.004 2013-03-25 New: Support External codes & External Commands. Remote Control.
 v3.2.000 2014-10-20 Domain LU8AJA.com.ar replaced with albinarrate.com.
 v3.2.001 2015-04-08 Readded AP Today in history via custom command TODAY. MSN & Twitter removed.
+v4.0.001 2019-02-16 Resumed development and fixes, changed version for a clear restart.
+
 See:
   http://albinarrate.com/heavymetal.html
   http://github.com/lu8aja/HeavyMetal";
@@ -115,6 +118,7 @@ $Modules{'Win32::API'}         = {order => $n++, loaded => 0, required => 1, os 
 $Modules{'File::Spec::Win32'}  = {order => $n++, loaded => 0, required => 1, os => 'Win32'};
 $Modules{'Device::SerialPort'} = {order => $n++, loaded => 0, required => 1, os => 'Linux'}; #This surely will need to be tweaked
 $Modules{'LWP::Simple'}        = {order => $n++, loaded => 0, required => 1, os => ''};
+$Modules{'HTTP::Cookies'}      = {order => $n++, loaded => 0, required => 0, os => ''}; # Used by URl commands
 $Modules{'Net::POP3'}          = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'Net::SMTP'}          = {order => $n++, loaded => 0, required => 0, os => ''};
 $Modules{'Net::FTP'}           = {order => $n++, loaded => 0, required => 0, os => ''};
@@ -180,6 +184,53 @@ $Configs{UnitTemp}        = 'Celsius';
 $Configs{ConsoleOnly}     = 0;
 $Configs{CommandsMaxHistory} = 10;
 $Configs{CronEnabled}     = 0;
+$Configs{'Cron.0'}        = '';
+$Configs{'Cron.1'}        = '';
+$Configs{'Cron.2'}        = '';
+$Configs{'Cron.3'}        = '';
+$Configs{'Cron.4'}        = '';
+$Configs{'Cron.5'}        = '';
+$Configs{'Cron.6'}        = '';
+$Configs{'Cron.7'}        = '';
+$Configs{'Cron.8'}        = '';
+$Configs{'Cron.9'}        = '';
+$Configs{'Cron.10'}       = '';
+$Configs{'Cron.11'}       = '';
+
+$Configs{'CommandMenu.0'} = '';
+$Configs{'CommandMenu.1'} = '';
+$Configs{'CommandMenu.2'} = '';
+$Configs{'CommandMenu.3'} = '';
+$Configs{'CommandMenu.4'} = '';
+$Configs{'CommandMenu.5'} = '';
+$Configs{'CommandMenu.6'} = '';
+$Configs{'CommandMenu.7'} = '';
+$Configs{'CommandMenu.8'} = '';
+
+$Configs{'WeatherFavorite.0'} = '';
+$Configs{'WeatherFavorite.1'} = '';
+$Configs{'WeatherFavorite.2'} = '';
+$Configs{'WeatherFavorite.3'} = '';
+$Configs{'WeatherFavorite.4'} = '';
+$Configs{'WeatherFavorite.5'} = '';
+$Configs{'WeatherFavorite.6'} = '';
+$Configs{'WeatherFavorite.7'} = '';
+$Configs{'WeatherFavorite.8'} = '';
+
+$Configs{'TelnetHost.0'} = '';
+$Configs{'TelnetHost.1'} = '';
+$Configs{'TelnetHost.2'} = '';
+
+$Configs{'RSS.Menu.0'} = '';
+$Configs{'RSS.Menu.1'} = '';
+$Configs{'RSS.Menu.2'} = '';
+$Configs{'RSS.Menu.3'} = '';
+$Configs{'RSS.Menu.4'} = '';
+$Configs{'RSS.Menu.5'} = '';
+$Configs{'RSS.Menu.6'} = '';
+$Configs{'RSS.Menu.7'} = '';
+$Configs{'RSS.Menu.8'} = '';
+
 
 #-- Code converstion settings.  Current choices are ASCII, USTTY, ITA2, TTS-M20
 
@@ -331,10 +382,6 @@ $Configs{StockPortfolio} = "DJI SPC AOL IBM";
 $Configs{Columns} = 68;
 
 $Configs{CopyHostOutput} = 'OFF';
-
-#-- Weather reports from tgftp.nws.noaa.gov
-$Configs{WeatherNoaaForecastBase} = 'ftp://tgftp.nws.noaa.gov/data/forecasts/city/';
-$Configs{WeatherNoaaClimateBase}  = 'ftp://tgftp.nws.noaa.gov/data/climate/daily/';
 
 $Configs{WeatherDefaultSource} = 'WWO';
 
@@ -641,13 +688,14 @@ my %Commands = (
 	'SENDMAIL'  => {command => \&do_email_send,      auth => 3, help => 'Send email (Interactive command)',   args => 'email-to subject (optional)'},
 	'EMAIL'     => {command => \&do_email_send,      auth => 3, help => 'Send email (Interactive command)',   args => 'email-to subject (optional)'},
 	'SMS'       => {command => \&do_sms_send,        auth => 3, help => 'Send an SMS',                        args => 'to-phone message'},
-	'QBF'       => {command => \&do_qbf,             auth => 2, help => 'Test QBF',                           args => 'No args'},
-	'RYRY'      => {command => \&do_ryry,            auth => 2, help => 'Test RYRY',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
-	'R6R6'      => {command => \&do_r6r6,            auth => 2, help => 'Test R6R6',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
-	'RRRR'      => {command => \&do_rrrr,            auth => 2, help => 'Test RRRR',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
-	'UUUU'      => {command => \&do_uuuu,            auth => 2, help => 'Test UUUU',                          args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
-	'RAW5BIT'   => {command => \&do_raw_5bit,        auth => 2, help => 'Test Raw 5 bits',                    args => 'No args'},
-	'RAW6BIT'   => {command => \&do_raw_6bit,        auth => 2, help => 'Test Raw 6 bits',                    args => 'No args'},
+	'QBF'       => {command => \&do_qbf,             auth => 2, help => 'Test: Quick Brown Fox',              args => 'No args'},
+	'RYRY'      => {command => \&do_ryry,            auth => 2, help => 'Test: RYRY',                         args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
+	'R6R6'      => {command => \&do_r6r6,            auth => 2, help => 'Test: R6R6',                         args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
+	'RRRR'      => {command => \&do_rrrr,            auth => 2, help => 'Test: RRRR',                         args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
+	'UUUU'      => {command => \&do_uuuu,            auth => 2, help => 'Test: UUUU',                         args => 'num-lines (optional) ON/OFF (optional to show line nums)'},
+	'RULER'     => {command => \&do_ruler,           auth => 2, help => 'Test: Draw a ruler with numbers',    args => 'No args'},
+	'RAW5BIT'   => {command => \&do_raw_5bit,        auth => 2, help => 'Test: Raw 5 bits',                   args => 'No args'},
+	'RAW6BIT'   => {command => \&do_raw_6bit,        auth => 2, help => 'Test: Raw 6 bits',                   args => 'No args'},
 	'ECHOTEST'  => {command => \&do_echotest,        auth => 3, help => 'Test for echo in TTY loop',          args => 'id-session-of-tty'},
 	'SUPPRESS'  => {command => \&do_suppress,        auth => 3, help => 'Enable/Disable loop echo supression',args => 'On/Off'},
 	'MOTOR'     => {command => \&do_motor,           auth => 3, help => 'Enable/Disable the TTY motor via RTS/DTR',args => 'id-session-of-tty On/Off'},
@@ -1446,7 +1494,7 @@ sub main_tk_error{
 sub session_set_eol {
 	my ($idSession) = @_;
 	if ($Configs{"TTY.$idSession.Code"} eq 'ASCII'){
-		$aSessions[$idSession]->{eol} = $EOL;
+		$aSessions[$idSession]->{eol} = $EOL . $cr x $Configs{"TTY.$idSession.ExtraCR"};
 	}
 	else {
 		$aSessions[$idSession]->{eol} = $b_cr . $b_cr x $Configs{"TTY.$idSession.ExtraCR"} . $b_lf. $b_lf x $Configs{"TTY.$idSession.ExtraLR"} . $ltrs. $ltrs x $Configs{"TTY.$idSession.ExtraLTRS"};
@@ -1639,6 +1687,7 @@ sub config_set {
 		if (!$bDoNotUpdateGUI){
 			UI_updateControl($sKey, $sVal);
 		}
+		UI_menu_enableSave();
 	}
 
 	# Notify the REMOTE CONTROL CLIENT that the given config has changed
@@ -2059,55 +2108,6 @@ sub initialize_menu {
 	$oTkMenues{Weather} = $oTkMenues{Main}->new_menu();
 	$oTkMenues{Main}->add_cascade(-label => "Weather", -menu => $oTkMenues{Weather});
 
-	$oTkMenues{Weather_NOAA_forecast_US} = $oTkMenues{Weather}->new_menu();
-	$oTkMenues{Weather}->add_cascade(-label =>'US Cities forecast from NOAA FTP', -menu => $oTkMenues{Weather_NOAA_forecast_US});
-
-	$oTkMenues{Weather_NOAA_climate_US} = $oTkMenues{Weather}->new_menu();
-	$oTkMenues{Weather}->add_cascade(-label =>'US Cities climate from NOAA FTP', -menu => $oTkMenues{Weather_NOAA_climate_US});
-
-
-	my $nCount = 0;
-	foreach my $sSubLabel (sort @aWeatherStates) {
-		$nCount++;
-		my $nColumnBreak = ($bWindows && ($nCount % 20) == 0) ? 1 : 0;
-
-		my $sMenuLevel = "Weather_NOAA_forecast_US_$sSubLabel";
-		$oTkMenues{$sMenuLevel} = $oTkMenues{Weather_NOAA_forecast_US}->new_menu();
-		$oTkMenues{Weather_NOAA_forecast_US}->add_cascade(-label => $sSubLabel, -menu => $oTkMenues{$sMenuLevel}, -columnbreak =>  $nColumnBreak);
-
-		# Load from cache
-		my $rCities = $Global{'NoaaFtpTree'}->{forecast} ? $Global{'NoaaFtpTree'}->{forecast}->{$sSubLabel} : undef;
-		if ($rCities){
-			foreach my $sCity (@$rCities){
-				$oTkMenues{$sMenuLevel}->add_command(-label => $sCity, -command  => [\&menu_execute, $sEscape."WEATHER NOAA $sSubLabel $sCity\n"]);
-			}
-			$oTkMenues{$sMenuLevel}->add_command(-label => "- Click to reload cities from NOAA FTP -", -font => 'FontMenuNote', -command  => [\&UI_weather_FTP_init, $sMenuLevel, 'forecast', $sSubLabel]);
-		}
-		else {
-			$oTkMenues{$sMenuLevel}->add_command(-label => "- Click to load cities from NOAA FTP -", -font => 'FontMenuNote', -command  => [\&UI_weather_FTP_init, $sMenuLevel, 'forecast', $sSubLabel]);
-		}
-
-
-		my $sMenuLevel = "Weather_NOAA_climate_US_$sSubLabel";
-		$oTkMenues{$sMenuLevel} = $oTkMenues{Weather_NOAA_climate_US}->new_menu();
-		$oTkMenues{Weather_NOAA_climate_US}->add_cascade(-label => $sSubLabel, -menu => $oTkMenues{$sMenuLevel}, -columnbreak =>  $nColumnBreak);
-
-		# Load from cache
-		my $rCities = $Global{'NoaaFtpTree'}->{climate} ? $Global{'NoaaFtpTree'}->{climate}->{$sSubLabel} : undef;
-		if ($rCities){
-			foreach my $sCity (@$rCities){
-				$oTkMenues{$sMenuLevel}->add_command(-label => $sCity, -command  => [\&menu_execute, $sEscape."WEATHER NOAA CLIMATE $sSubLabel $sCity\n"]);
-			}
-			$oTkMenues{$sMenuLevel}->add_command(-label => "- Click to reload cities from NOAA FTP -", -font => 'FontMenuNote', -command  => [\&UI_weather_FTP_init, $sMenuLevel, 'climate', $sSubLabel]);
-		}
-		else {
-			$oTkMenues{$sMenuLevel}->add_command(-label => "- Click to load cities from NOAA FTP -", -font => 'FontMenuNote', -command  => [\&UI_weather_FTP_init, $sMenuLevel, 'climate' , $sSubLabel]);
-		}
-
-	}
-
-	$oTkMenues{Weather}->add_separator();
-
 	# Here we add quick favorite cities
 	$oTkMenues{Weather}->add_command(-label=>'- Favorite Sources/Cities -');
 	$nCount = 0;
@@ -2136,6 +2136,7 @@ sub initialize_menu {
 	$oTkMenues{Tests}->add_command(-label => "RYRY (Square Wave in ITA-2)", -command => [\&menu_execute, $sEscape."RYRY 10\n"]);
 	$oTkMenues{Tests}->add_command(-label => "R6R6 (Heavy in ITA-2)",       -command => [\&menu_execute, $sEscape."R6R6 10\n"]);
 	$oTkMenues{Tests}->add_command(-label => "UUUU (Square Wave in ASCII)", -command => [\&menu_execute, $sEscape."UUUU 10\n"]);
+	$oTkMenues{Tests}->add_command(-label => "Ruler with numbers",          -command => [\&menu_execute, $sEscape."RULER\n"]);
 	$oTkMenues{Tests}->add_command(-label => "Raw 5-bit codes",             -command => [\&menu_execute, $sEscape."RAW5BIT\n"]);
 	$oTkMenues{Tests}->add_command(-label => "Raw 6-bit codes",             -command => [\&menu_execute, $sEscape."RAW6BIT\n"]);
 
@@ -2155,8 +2156,26 @@ sub initialize_menu {
 	$oTkMenues{Help}->add_command(-label => "Autoupdate this version",-command => [\&menu_execute, $sEscape."VERSION CHECK UPDATE\n"]);
 	$oTkMenues{Help}->add_command(-label => "Send debug report to author",-command => [\&menu_execute, $sEscape."HMREPORT\n"]);
 
+	$oTkMenues{Main}->add_command(-label => "                                        ");
+	$oTkMenues{Main}->entryconfigure(10,  -state => 'disabled' );
+
+	$oTkMenues{SaveCfg} = $oTkMenues{Main}->add_command(-label => "Save Cfg!",       -command => \&do_saveconfig);
+	UI_menu_disableSave();
+
 	$oTkMainWindow->configure(-menu => $oTkMenues{Main});
 
+}
+
+sub UI_menu_disableSave {
+	if ($bTkEnabled){
+		$oTkMenues{Main}->entryconfigure(11,  -state => 'disabled', -label => '   ');
+	}
+}
+
+sub UI_menu_enableSave {
+	if ($bTkEnabled && $oTkMenues{Main}){
+		$oTkMenues{Main}->entryconfigure(11,  -state => 'normal', -label => 'Save Cfg!');
+	}
 }
 
 sub initialize_windows {
@@ -2202,10 +2221,8 @@ sub initialize_windows {
 
 	initialize_statusbar($oTkMainWindow);
 
-
-
 	$oTkControls{'MainTabs'}    = $oTkMainWindow->new_ttk__notebook();
-	$oTkControls{'MainTabs'}->g_pack(-side=>'top',-fill=>'both');
+	$oTkControls{'MainTabs'}->g_pack(-side=>'top');
 
 	if ($bControlRemote){
 		UI_addMainTab('TabRemote',    'Debug',  {}, \&initialize_tab_remote);
@@ -2755,7 +2772,6 @@ sub initialize_tab_port_tty{
 		-variable => \$Configs{SerialSetserial},
 		-text => ($bWindows ? 'Use setdiv (Win)' : 'Use setserial (linux)')
 	}, 2);
-		UI_newRow();
 	UI_addControl("TTY.$nTTY.Address", 'combobox', 'Address', {-values => \%aPortAddresses, -width => 5});
 
 	UI_newRow();
@@ -2778,7 +2794,6 @@ sub initialize_tab_port_tty{
 	UI_newRow();
 	UI_addControl("FramePortBaudot-$nTTY",    'labelframe', '', {-text => 'Baudot Codes'}, {-sticky => 'n', -columnspan => 3});
 
-	UI_newRow();
 	UI_addControl("FramePortSession-$nTTY",    'labelframe', '', {-text => 'Session configs'}, {-sticky => 'n', -columnspan => 5});
 
 	# Inner frames now...
@@ -2792,11 +2807,9 @@ sub initialize_tab_port_tty{
 	UI_setParent("FramePortsTests-$nTTY");
 	UI_addControl("ButtonPortsTestRYRY-$nTTY",    'button', '', {-text => 'RYRY',      -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}RYRY\n", 1]});
 	UI_addControl("ButtonPortsTestRYRY100-$nTTY", 'button', '', {-text => 'RYRY 100',  -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}RYRY 100\n", 1]});
-
 	UI_addControl("ButtonPortsTestUUUU-$nTTY",    'button', '', {-text => 'UUUU',      -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}UUUU\n", 1]});
 	UI_addControl("ButtonPortsTestUUUU100-$nTTY", 'button', '', {-text => 'UUUU 100',  -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}UUUU 100\n", 1]});
-
-
+	UI_addControl("ButtonPortsTestRULER-$nTTY",   'button', '', {-text => 'Ruler',     -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}RULER\n", 1]});
 	UI_addControl("ButtonPortsTestQBF-$nTTY",     'button', '', {-text => 'QBF',       -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}SEND $nTTY $Configs{EscapeChar}QBF 100\n", 1]});
 	UI_addControl("ButtonPortsTestEcho-$nTTY",    'button', '', {-text => 'Echo test', -state => 'disabled', -command => [\&menu_execute, "$Configs{EscapeChar}ECHOTEST $nTTY\n", 1]});
 
@@ -2813,12 +2826,13 @@ sub initialize_tab_port_tty{
 	UI_addControl("TTY.$nTTY.LineDTR",     'combobox', 'Line DTR', {-values => \%GlobalSeriaLinesStatus, -state => 'readonly', -width => 16});
 
 	UI_setParent("FramePortSession-$nTTY", 1);
-	UI_addControl("TTY.$nTTY.Label",      'checkbutton', '', {-variable => \$Configs{"TTY.$nTTY.Label"}, -text => 'Show source label',   -onvalue => 1, -offvalue => 0}, 3)->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Label"]);
-	UI_addControl("TTY.$nTTY.Prompt",     'checkbutton', '', {-variable => \$Configs{"TTY.$nTTY.Prompt"},      -text => 'Show command prompt', -onvalue => 1, -offvalue => 0}, 3)->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Prompt"]);
+	UI_addControl("TTY.$nTTY.Label",      'checkbutton', 'Show: ', {-variable => \$Configs{"TTY.$nTTY.Label"}, -text => 'Source label',   -onvalue => 1, -offvalue => 0})->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Label"]);
+	UI_addControl("TTY.$nTTY.Prompt",     'checkbutton', '', {-variable => \$Configs{"TTY.$nTTY.Prompt"},      -text => 'Command prompt', -onvalue => 1, -offvalue => 0})->g_bind('<FocusOut>' => [\&UI_changedControl, "TTY.$nTTY.Prompt"]);
 	UI_newRow(0);
 	UI_addControl("TTY.$nTTY.Source",     'combobox', 'Initial Source',{-values => ['HOST', 'ALL'], -width => 10});
 	UI_addControl("TTY.$nTTY.Target",     'combobox', 'Initial Target',{-values => ['HOST', 'ALL'], -width => 10});
 	#UI_addControl("TTY.$nTTY.Direction",  'combobox', 'Direction',     {-values => ['In', 'Out'],   -width => 4,  -state => 'readonly'});
+	UI_newRow(0);
 	UI_addControl("TTY.$nTTY.Auth",       'combobox', 'Auth level',    {-values => [0,1,2,3],       -width => 4,  -state => 'readonly'});
 
 	return;
@@ -3082,13 +3096,16 @@ sub UI_changedControl{
 
 		}
 
+#HACK!!!
+$bAllowCreate = 1;
+
 		if (!$Global{ControlServer}){
 			if (defined($Configs{$sCfgKey}) || $bAllowCreate){
 				config_set($sCfgKey, $sCfgVal, 1);
 			}
 		}
 		elsif($sCfgKey =~ /^[A-Z][a-zA-Z0-9\.]+[a-zA-Z0-9]$/){
-			message_out($Global{ControlServer}, "\$CONFIG $sCfgKey $sCfgVal");
+			message_out($Global{ControlServer}, "\$CONFIG +$sCfgKey $sCfgVal");
 		}
 
 		if ($idEl eq 'RSS.Feed'){
@@ -4678,10 +4695,10 @@ sub do_saveconfig {
 				print $CONFIG "-$sVar=$Configs{$sVar}\n";
 			}
 		}
-		#print CONFIG "--SERIALINIT\n";
 		close($CONFIG);
 		return "DONE";
 	}
+	UI_Menu_disableSave();
 }
 
 
@@ -4840,12 +4857,12 @@ sub process_cron{
 		if ($Configs{$sKey}){
 			my $sCron = $Configs{$sKey};
 			if ($sCron =~ /^(\d|\d\d|\*|\*\/\d+)\s+(\d|\d\d|\*|\*\/\d+)\s+(\d|\d\d|\*|\*\/\d+)\s+(\d|\d\d|\*|\*\/\d+)\s+(\d|\d\d|\*|\*\/\d+)\s+(\d|\d\d|\*|\*\/\d+)\s+(.+)$/){
-				if (($1 eq '*' || $1 == $Min  || (substr($1, 0, 2) eq '*/' && ($nDiv = int(substr($1, 2))) && $Min  % $nDiv == 0))
-				 && ($2 eq '*' || $2 == $Hour || (substr($2, 0, 2) eq '*/' && ($nDiv = int(substr($2, 2))) && $Hour % $nDiv == 0))
-				 && ($3 eq '*' || $3 == $Day  || (substr($3, 0, 2) eq '*/' && ($nDiv = int(substr($3, 2))) && $Day  % $nDiv == 0))
-				 && ($4 eq '*' || $4 == $Mon  || (substr($4, 0, 2) eq '*/' && ($nDiv = int(substr($4, 2))) && $Mon  % $nDiv == 0))
-				 && ($5 eq '*' || $5 == $WDay || (substr($5, 0, 2) eq '*/' && ($nDiv = int(substr($5, 2))) && $WDay % $nDiv == 0))
-				 && ($6 eq '*' || $6 == $nUpt || (substr($6, 0, 2) eq '*/' && ($nDiv = int(substr($6, 2))) && $nUpt % $nDiv == 0))
+				if (($1 eq '*' || $1 == $Min  || (substr($1, 0, 2) eq '*/' && $Min  % int(substr($1, 2)) == 0))
+				 && ($2 eq '*' || $2 == $Hour || (substr($2, 0, 2) eq '*/' && $Hour % int(substr($2, 2)) == 0))
+				 && ($3 eq '*' || $3 == $Day  || (substr($3, 0, 2) eq '*/' && $Day  % int(substr($3, 2)) == 0))
+				 && ($4 eq '*' || $4 == $Mon  || (substr($4, 0, 2) eq '*/' && $Mon  % int(substr($4, 2)) == 0))
+				 && ($5 eq '*' || $5 == $WDay || (substr($5, 0, 2) eq '*/' && $WDay % int(substr($5, 2)) == 0))
+				 && ($6 eq '*' || $6 == $nUpt || (substr($6, 0, 2) eq '*/' && $nUpt % int(substr($6, 2)) == 0))
 				){
 					push(@aCommands, $7);
 				}
@@ -5161,6 +5178,9 @@ sub serial_init{
 		if (defined $oTkControls{"ButtonPortsTestUUUU100-$idSession"}){
 			$oTkControls{"ButtonPortsTestUUUU100-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
 		}
+		if (defined $oTkControls{"ButtonPortsTestRULER-$idSession"}){
+			$oTkControls{"ButtonPortsTestRULER-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
+		}
 		if (defined $oTkControls{"ButtonPortsTestQBF-$idSession"}){
 			$oTkControls{"ButtonPortsTestQBF-$idSession"}->{control}->configure(-state => ($thisSession->{status} ? 'normal' : 'disabled'));
 		}
@@ -5458,6 +5478,18 @@ sub HTTP_get{
 		return undef;
 	}
 	my $oUA = LWP::UserAgent->new();
+
+	if (!$Modules{'HTTP::Cookies'}->{loaded}){
+		if ($Configs{Debug} > 1){ logDebug("ERROR Missing perl module HTTP::Cookies\n");}
+	}
+	else {
+		my $oCookies = HTTP::Cookies->new(
+			file     => "./cookies.dat",
+			autosave => 1,
+		);
+		$oUA->cookie_jar( $oCookies );
+	}
+
 	$oUA->timeout(10);
 
 	$oUA->add_handler(response_header => sub { return HTTP_progress('HEAD', @_);});
@@ -9549,6 +9581,13 @@ sub do_uuuu {
 	return generate_test($idSession, 'UUUU', 'UUUU TEST', 'U', int($aArgs[0]), (uc($aArgs[1]) eq 'OFF' ? 0 : 1));
 }
 
+sub do_ruler {
+	my ($idSession, $sArgs) = @_;
+	my @aArgs = split(/\s+/, $sArgs);
+
+	return generate_test($idSession, 'RULER', 'RULER TEST', '1234567890', 1, 0);
+}
+
 sub do_raw_5bit {
 	my ($idSession, $sArgs) = @_;
 
@@ -12084,70 +12123,6 @@ sub transcode_to_loop{
 	}
 
 	return $sOut;
-}
-
-
-
-
-#------------------------------------------------------------------------
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#------------------------------------------------------------------------
-
-
-
-
-
-
-
-#-----------------------------------------------------------------------------
-# Weather reports from tgftp.nws.noaa.gov
-#-----------------------------------------------------------------------------
-sub UI_weather_FTP_init{
-	my($sMenu, $sWhat, $sState) = @_;
-
-	if (!defined $sState || $sWhat ne 'climate' && $sWhat ne 'forecast'){
-		return;
-	}
-
-	if (length $sState == 2){
-		my @aFiles = ftp_list(($sWhat eq 'climate' ? $Configs{WeatherNoaaClimateBase} : $Configs{WeatherNoaaForecastBase}) . lc($sState) . '/*');
-
-
-		if ($aFiles[0] =~ /^-- ERROR/){
-			# Display the error in the menu
-			UI_menu_addCommands($sMenu, [[$aFiles[0]]], 1, 'last');
-		}
-		else {
-			my $rCities = [];
- 			my @aMenuCommands;
-
- 			push(@aMenuCommands, {-label => "- Click to reload cities from NOAA FTP -", -command => [\&UI_weather_FTP_init, $sMenu, $sWhat, $sState], -font => 'FontMenuNote'});
-
-			foreach my $sCity (sort @aFiles){
-				$sCity =~ s/\.txt$//;
-				$sCity =~ tr/_/ /;
-				push(@aMenuCommands, [$sCity, "$Configs{EscapeChar}WEATHER NOAA ".($sWhat eq 'climate' ? 'CLIMATE ' : '')."$sState $sCity\n"]);
-				push(@$rCities, $sCity);
-			}
-
-			UI_menu_addCommands($sMenu, \@aMenuCommands, 0, 'last');
-
-			# Save in the cache
-			if (!defined($Global{'NoaaFtpTree'}->{$sWhat})){
-				$Global{'NoaaFtpTree'}->{$sWhat} = {};
-			}
-
-			$Global{'NoaaFtpTree'}->{$sWhat}->{$sState} = $rCities;
-
-			if ($Modules{JSON}->{loaded}){
-				if (open(my $FH, '>', 'tmp/noaa-ftp.json')){
-					print $FH encode_json($Global{'NoaaFtpTree'});
-					close($FH);
-				}
-			}
-		}
-
-	}
 }
 
 

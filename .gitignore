@@ -2,6 +2,8 @@
 # Project speciffic
 personal.cfg
 
+cookies.dat
+
 
 [Dd]ebug/
 build/
